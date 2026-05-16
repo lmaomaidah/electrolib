@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string | null
+          avg_rating: number | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          genre: string | null
+          id: string
+          isbn: string | null
+          title: string
+        }
+        Insert: {
+          author?: string | null
+          avg_rating?: number | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          genre?: string | null
+          id?: string
+          isbn?: string | null
+          title: string
+        }
+        Update: {
+          author?: string | null
+          avg_rating?: number | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          genre?: string | null
+          id?: string
+          isbn?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          reading_goal: number | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          reading_goal?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          reading_goal?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_books: {
+        Row: {
+          book_id: string
+          created_at: string
+          current_page: number | null
+          date_read: string | null
+          id: string
+          is_favorite: boolean
+          rating: number | null
+          review: string | null
+          shelf: Database["public"]["Enums"]["shelf_label"]
+          spine_color: string | null
+          total_pages: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          current_page?: number | null
+          date_read?: string | null
+          id?: string
+          is_favorite?: boolean
+          rating?: number | null
+          review?: string | null
+          shelf?: Database["public"]["Enums"]["shelf_label"]
+          spine_color?: string | null
+          total_pages?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          current_page?: number | null
+          date_read?: string | null
+          id?: string
+          is_favorite?: boolean
+          rating?: number | null
+          review?: string | null
+          shelf?: Database["public"]["Enums"]["shelf_label"]
+          spine_color?: string | null
+          total_pages?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +141,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      shelf_label: "read" | "currently-reading" | "want-to-read"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +268,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      shelf_label: ["read", "currently-reading", "want-to-read"],
+    },
   },
 } as const
