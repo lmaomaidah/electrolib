@@ -105,7 +105,7 @@ function AuthPage() {
             {mode !== "magic" && (
               <Field label="Password">
                 <input
-                  type="password" required={mode !== "magic"} value={password}
+                  type="password" required value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="input"
