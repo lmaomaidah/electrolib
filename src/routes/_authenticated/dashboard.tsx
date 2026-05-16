@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — The Shelf" }] }),
 });
 
-type Profile = { display_name: string | null; avatar_url: string | null; reading_goal: number };
+type Profile = { display_name: string | null; avatar_url: string | null; reading_goal: number | null };
 type UserBook = {
   id: string; shelf: string; current_page: number; total_pages: number | null; spine_color: string | null;
   book: { id: string; title: string; author: string | null; cover_url: string | null; description: string | null };
