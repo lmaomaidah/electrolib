@@ -677,7 +677,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone: "sag
 }
 
 /* ─────────── helpers ─────────── */
-function parseCsv(text: string): Record<string, string>[] {
+function parseCsv(text: string): { headers: string[]; rows: Record<string, string>[] } {
   const lines: string[][] = [];
   let cur: string[] = []; let cell = ""; let inQ = false;
   for (let i = 0; i < text.length; i++) {
@@ -695,11 +695,12 @@ function parseCsv(text: string): Record<string, string>[] {
     }
   }
   if (cell.length > 0 || cur.length > 0) { cur.push(cell); lines.push(cur); }
-  if (lines.length < 2) return [];
-  const header = lines[0];
-  return lines.slice(1).filter((l) => l.length === header.length).map((l) =>
-    Object.fromEntries(header.map((h, i) => [h.trim(), (l[i] ?? "").trim()]))
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const headers = lines[0].map((h) => h.trim());
+  const rows = lines.slice(1).filter((l) => l.length === headers.length).map((l) =>
+    Object.fromEntries(headers.map((h, i) => [h, (l[i] ?? "").trim()]))
   );
+  return { headers, rows };
 }
 
 function isLight(hex: string): boolean {
