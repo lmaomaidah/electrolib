@@ -371,68 +371,313 @@ function AddBookModal({ userId, onClose, onAdded }: { userId: string; onClose: (
 }
 
 /* ─────────── CSV Import (Goodreads) ─────────── */
+
+type Stage = "idle" | "preview" | "importing" | "done";
+type ParsedRow = {
+  raw: Record<string, string>;
+  title: string;
+  author: string | null;
+  shelf: Shelf;
+  rating: number | null;
+  avg: number | null;
+  isbn: string | null;
+  dateRead: string | null;
+  review: string | null;
+  reason?: string; // skip reason
+};
+
+const FIELD_MAP: { label: string; columns: string[] }[] = [
+  { label: "Title", columns: ["Title"] },
+  { label: "Author", columns: ["Author", "Author l-f"] },
+  { label: "Shelf", columns: ["Exclusive Shelf", "Bookshelves"] },
+  { label: "My rating", columns: ["My Rating"] },
+  { label: "Avg rating", columns: ["Average Rating"] },
+  { label: "ISBN", columns: ["ISBN13", "ISBN"] },
+  { label: "Date read", columns: ["Date Read"] },
+  { label: "Review", columns: ["My Review"] },
+];
+
 function CsvImport({ userId }: { userId: string | null }) {
   const ref = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
-  const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<Stage>("idle");
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [parsed, setParsed] = useState<ParsedRow[]>([]);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [summary, setSummary] = useState<{ added: number; skipped: number; failed: number; errors: string[] }>({
+    added: 0, skipped: 0, failed: 0, errors: [],
+  });
 
-  async function handle(file: File) {
+  function reset() {
+    setStage("idle"); setHeaders([]); setParsed([]);
+    setProgress({ done: 0, total: 0 });
+    setSummary({ added: 0, skipped: 0, failed: 0, errors: [] });
+  }
+
+  async function onFile(file: File) {
     if (!userId) return;
-    setBusy(true);
-    const text = await file.text();
-    const rows = parseCsv(text);
-    if (rows.length === 0) { toast.error("No rows found"); setBusy(false); return; }
-
-    let added = 0;
     try {
-      for (const r of rows) {
-        const title = r["Title"]; if (!title) continue;
-        const author = r["Author"] || r["Author l-f"] || null;
-        const exclusive = (r["Exclusive Shelf"] || "").toLowerCase();
-        const shelf: Shelf = exclusive === "read" ? "read"
-          : exclusive === "currently-reading" ? "currently-reading" : "want-to-read";
-        const myRating = Number(r["My Rating"] || 0) || null;
+      const text = await file.text();
+      const { headers: hs, rows } = parseCsv(text);
+      if (rows.length === 0) {
+        toast.error("This file is empty or unreadable.");
+        return;
+      }
+      const mapped: ParsedRow[] = rows.map((r) => {
+        const title = (r["Title"] || "").trim();
+        const author = (r["Author"] || r["Author l-f"] || "").trim() || null;
+        const exclusive = (r["Exclusive Shelf"] || "").toLowerCase().trim();
+        const shelf: Shelf =
+          exclusive === "read" ? "read"
+          : exclusive === "currently-reading" ? "currently-reading"
+          : "want-to-read";
+        const rating = Number(r["My Rating"] || 0) || null;
         const avg = Number(r["Average Rating"] || 0) || null;
-        const isbn = (r["ISBN13"] || r["ISBN"] || "").replace(/[="]/g, "") || null;
-        const dateRead = r["Date Read"] || null;
-        const review = r["My Review"] || null;
+        const isbn = (r["ISBN13"] || r["ISBN"] || "").replace(/[="]/g, "").trim() || null;
+        const dateRead = (r["Date Read"] || "").trim() || null;
+        const review = (r["My Review"] || "").trim() || null;
+        const reason = !title ? "Missing title" : undefined;
+        return { raw: r, title, author, shelf, rating, avg, isbn, dateRead, review, reason };
+      });
+      setHeaders(hs);
+      setParsed(mapped);
+      setStage("preview");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not read file");
+    }
+  }
 
+  async function runImport() {
+    if (!userId) return;
+    const valid = parsed.filter((r) => !r.reason);
+    setStage("importing");
+    setProgress({ done: 0, total: valid.length });
+    const errors: string[] = [];
+    let added = 0, failed = 0;
+
+    for (let i = 0; i < valid.length; i++) {
+      const r = valid[i];
+      try {
         const { data: book, error: bErr } = await supabase
-          .from("books").insert({ title, author, isbn, avg_rating: avg }).select("id").single();
-        if (bErr || !book) continue;
+          .from("books")
+          .insert({ title: r.title, author: r.author, isbn: r.isbn, avg_rating: r.avg })
+          .select("id").single();
+        if (bErr || !book) throw bErr ?? new Error("book insert failed");
         const color = SPINE_COLORS[added % SPINE_COLORS.length];
         const { error: ubErr } = await supabase.from("user_books").insert({
-          user_id: userId, book_id: book.id, shelf, rating: myRating, review, date_read: dateRead, spine_color: color,
+          user_id: userId, book_id: book.id, shelf: r.shelf, rating: r.rating,
+          review: r.review, date_read: r.dateRead, spine_color: color,
         });
-        if (!ubErr) added++;
+        if (ubErr) throw ubErr;
+        added++;
+      } catch (e) {
+        failed++;
+        if (errors.length < 10) {
+          errors.push(`"${r.title}" — ${e instanceof Error ? e.message : "unknown error"}`);
+        }
       }
-      toast.success(`Imported ${added} ${added === 1 ? "book" : "books"}`);
-      qc.invalidateQueries({ queryKey: ["shelf"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-books"] });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Import failed");
-    } finally { setBusy(false); }
+      setProgress({ done: i + 1, total: valid.length });
+    }
+
+    setSummary({ added, failed, skipped: parsed.length - valid.length, errors });
+    setStage("done");
+    qc.invalidateQueries({ queryKey: ["shelf"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-books"] });
   }
+
+  const valid = parsed.filter((r) => !r.reason).length;
+  const skipped = parsed.length - valid;
 
   return (
     <>
       <input
         ref={ref} type="file" accept=".csv,text/csv" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handle(f); e.target.value = ""; }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }}
       />
       <button
-        onClick={() => ref.current?.click()} disabled={busy}
-        className="inline-flex items-center gap-2 rounded-full border border-walnut/30 bg-aged px-4 py-2 font-serif text-sm text-walnut transition hover:bg-parchment disabled:opacity-60"
+        onClick={() => ref.current?.click()}
+        className="inline-flex items-center gap-2 rounded-full border border-walnut/30 bg-aged px-4 py-2 font-serif text-sm text-walnut transition hover:bg-parchment"
         title="Import a Goodreads CSV (goodreads_library_export.csv)"
       >
-        <Upload className="h-4 w-4" /> {busy ? "Importing…" : "Import CSV"}
+        <Upload className="h-4 w-4" /> Import CSV
       </button>
+
+      {stage !== "idle" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4 backdrop-blur-sm" onClick={stage === "importing" ? undefined : reset}>
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl bg-card shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <div>
+                <h3 className="font-display text-2xl text-walnut">
+                  {stage === "preview" ? "Review your import"
+                    : stage === "importing" ? "Bringing your books home…"
+                    : "Import complete"}
+                </h3>
+                <p className="font-hand text-sm text-mahogany">
+                  {stage === "preview" ? "We've mapped your Goodreads columns to The Shelf."
+                    : stage === "importing" ? "Please keep this window open."
+                    : "Your library has grown."}
+                </p>
+              </div>
+              {stage !== "importing" && (
+                <button onClick={reset} className="rounded-full p-1.5 text-walnut/60 hover:bg-parchment">
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
+              {stage === "preview" && (
+                <>
+                  <div className="rounded-2xl border border-border bg-aged p-4">
+                    <p className="font-hand text-sm text-walnut">Column mapping</p>
+                    <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      {FIELD_MAP.map((f) => {
+                        const found = f.columns.find((c) => headers.includes(c));
+                        return (
+                          <div key={f.label} className="flex items-center justify-between gap-2 text-sm">
+                            <span className="font-serif text-walnut">{f.label}</span>
+                            {found ? (
+                              <span className="font-hand text-sage">→ {found}</span>
+                            ) : (
+                              <span className="font-hand text-walnut/40 italic">not found</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                    <Pill tone="sage">{valid} ready to import</Pill>
+                    {skipped > 0 && <Pill tone="rose">{skipped} will be skipped</Pill>}
+                  </div>
+
+                  <p className="mt-4 font-hand text-sm text-walnut">First {Math.min(5, parsed.length)} rows</p>
+                  <div className="mt-2 overflow-hidden rounded-xl border border-border">
+                    <table className="w-full text-left font-serif text-sm">
+                      <thead className="bg-parchment text-walnut">
+                        <tr>
+                          <th className="px-3 py-2">Title</th>
+                          <th className="px-3 py-2">Author</th>
+                          <th className="px-3 py-2">Shelf</th>
+                          <th className="px-3 py-2">★</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsed.slice(0, 5).map((r, i) => (
+                          <tr key={i} className={`border-t border-border ${r.reason ? "bg-rose/10" : ""}`}>
+                            <td className="px-3 py-2">{r.title || <em className="text-rose">missing</em>}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{r.author ?? "—"}</td>
+                            <td className="px-3 py-2 font-hand text-mahogany capitalize">{r.shelf.replace("-", " ")}</td>
+                            <td className="px-3 py-2">{r.rating ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {skipped > 0 && (
+                    <details className="mt-4">
+                      <summary className="cursor-pointer font-hand text-sm text-mahogany">
+                        Why {skipped} {skipped === 1 ? "row was" : "rows were"} skipped
+                      </summary>
+                      <ul className="mt-2 space-y-1 font-serif text-sm text-muted-foreground">
+                        {parsed.filter((r) => r.reason).slice(0, 8).map((r, i) => (
+                          <li key={i}>Row {i + 1}: {r.reason}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </>
+              )}
+
+              {stage === "importing" && (
+                <div className="py-8">
+                  <div className="flex items-baseline justify-between font-hand text-mahogany">
+                    <span>shelving {progress.done} of {progress.total}…</span>
+                    <span>{Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%</span>
+                  </div>
+                  <div className="mt-3 h-3 overflow-hidden rounded-full bg-parchment">
+                    <div
+                      className="h-full rounded-full bg-mahogany transition-all"
+                      style={{ width: `${(progress.done / Math.max(progress.total, 1)) * 100}%` }}
+                    />
+                  </div>
+                  <p className="mt-6 text-center font-serif italic text-sm text-muted-foreground">
+                    Lining up the spines, dusting the jackets…
+                  </p>
+                </div>
+              )}
+
+              {stage === "done" && (
+                <div className="py-2">
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <Stat label="Added" value={summary.added} tone="sage" />
+                    <Stat label="Skipped" value={summary.skipped} tone="muted" />
+                    <Stat label="Failed" value={summary.failed} tone={summary.failed > 0 ? "rose" : "muted"} />
+                  </div>
+                  {summary.errors.length > 0 && (
+                    <div className="mt-5 rounded-xl border border-rose/30 bg-rose/10 p-4">
+                      <p className="font-hand text-sm text-walnut">A few couldn't be added:</p>
+                      <ul className="mt-2 space-y-1 font-serif text-sm text-muted-foreground">
+                        {summary.errors.map((e, i) => <li key={i}>• {e}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <p className="mt-6 text-center font-display text-2xl text-walnut">
+                    {summary.added > 0 ? "Welcome home." : "Nothing was added."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-border bg-aged/60 px-6 py-4">
+              {stage === "preview" && (
+                <>
+                  <button onClick={reset} className="font-serif text-sm text-walnut/70 hover:text-walnut">Cancel</button>
+                  <button
+                    onClick={runImport} disabled={valid === 0}
+                    className="rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut disabled:opacity-50"
+                  >
+                    Import {valid} {valid === 1 ? "book" : "books"}
+                  </button>
+                </>
+              )}
+              {stage === "importing" && (
+                <span className="ml-auto font-hand text-sm text-muted-foreground">working…</span>
+              )}
+              {stage === "done" && (
+                <button onClick={reset} className="ml-auto rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut">
+                  Open my shelf
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
+function Pill({ children, tone }: { children: React.ReactNode; tone: "sage" | "rose" | "muted" }) {
+  const cls = tone === "sage" ? "bg-sage/20 text-walnut"
+    : tone === "rose" ? "bg-rose/25 text-walnut"
+    : "bg-parchment text-walnut/70";
+  return <span className={`rounded-full px-3 py-1 font-hand text-xs ${cls}`}>{children}</span>;
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone: "sage" | "rose" | "muted" }) {
+  const color = tone === "sage" ? "text-sage" : tone === "rose" ? "text-rose" : "text-walnut/60";
+  return (
+    <div className="rounded-2xl border border-border bg-aged py-4">
+      <div className={`font-display text-4xl ${color}`}>{value}</div>
+      <div className="mt-1 font-hand text-xs text-walnut">{label}</div>
+    </div>
+  );
+}
+
 /* ─────────── helpers ─────────── */
-function parseCsv(text: string): Record<string, string>[] {
+function parseCsv(text: string): { headers: string[]; rows: Record<string, string>[] } {
   const lines: string[][] = [];
   let cur: string[] = []; let cell = ""; let inQ = false;
   for (let i = 0; i < text.length; i++) {
@@ -450,11 +695,12 @@ function parseCsv(text: string): Record<string, string>[] {
     }
   }
   if (cell.length > 0 || cur.length > 0) { cur.push(cell); lines.push(cur); }
-  if (lines.length < 2) return [];
-  const header = lines[0];
-  return lines.slice(1).filter((l) => l.length === header.length).map((l) =>
-    Object.fromEntries(header.map((h, i) => [h.trim(), (l[i] ?? "").trim()]))
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const headers = lines[0].map((h) => h.trim());
+  const rows = lines.slice(1).filter((l) => l.length === headers.length).map((l) =>
+    Object.fromEntries(headers.map((h, i) => [h, (l[i] ?? "").trim()]))
   );
+  return { headers, rows };
 }
 
 function isLight(hex: string): boolean {
