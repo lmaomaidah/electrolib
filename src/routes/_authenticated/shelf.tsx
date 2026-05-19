@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -281,6 +281,12 @@ function BookModal({ row, onClose, onChange }: { row: Row; onClose: () => void; 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <button onClick={remove} className="font-serif text-sm text-destructive hover:underline">Remove from shelf</button>
           <div className="flex gap-2">
+            <Link
+              to="/read/$bookId" params={{ bookId: row.id }}
+              className="inline-flex items-center gap-1 rounded-full bg-gold px-5 py-2 font-serif text-sm text-ink hover:opacity-90"
+            >
+              <BookOpen className="h-4 w-4" /> Open reader
+            </Link>
             <button onClick={onClose} className="rounded-full border border-border px-5 py-2 font-serif text-sm text-walnut hover:bg-parchment">Cancel</button>
             <button onClick={save} className="rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut">Save</button>
           </div>
