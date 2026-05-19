@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, ArrowLeft, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-// @ts-expect-error - epubjs ships its own types but not under @types/
 import ePub from "epubjs";
 
 export const Route = createFileRoute("/_authenticated/read/$bookId")({

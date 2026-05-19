@@ -58,6 +58,7 @@ function FriendsPage() {
 
   const follow = useMutation({
     mutationFn: async (followeeId: string) => {
+      if (!me) throw new Error("Not signed in");
       const { error } = await supabase.from("follows").insert({ follower_id: me, followee_id: followeeId });
       if (error) throw error;
     },
@@ -67,6 +68,7 @@ function FriendsPage() {
 
   const unfollow = useMutation({
     mutationFn: async (followeeId: string) => {
+      if (!me) throw new Error("Not signed in");
       const { error } = await supabase.from("follows").delete().eq("follower_id", me).eq("followee_id", followeeId);
       if (error) throw error;
     },
