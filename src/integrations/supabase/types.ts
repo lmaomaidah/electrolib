@@ -50,29 +50,56 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          followee_id: string
+          follower_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          followee_id: string
+          follower_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          followee_id?: string
+          follower_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          currently_reading_id: string | null
           display_name: string | null
           id: string
           reading_goal: number | null
+          theme: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          currently_reading_id?: string | null
           display_name?: string | null
           id: string
           reading_goal?: number | null
+          theme?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          currently_reading_id?: string | null
           display_name?: string | null
           id?: string
           reading_goal?: number | null
+          theme?: string
           updated_at?: string
         }
         Relationships: []
@@ -83,9 +110,12 @@ export type Database = {
           created_at: string
           current_page: number | null
           date_read: string | null
+          epub_path: string | null
           id: string
           is_favorite: boolean
           rating: number | null
+          reader_cfi: string | null
+          reader_percent: number | null
           review: string | null
           shelf: Database["public"]["Enums"]["shelf_label"]
           spine_color: string | null
@@ -98,9 +128,12 @@ export type Database = {
           created_at?: string
           current_page?: number | null
           date_read?: string | null
+          epub_path?: string | null
           id?: string
           is_favorite?: boolean
           rating?: number | null
+          reader_cfi?: string | null
+          reader_percent?: number | null
           review?: string | null
           shelf?: Database["public"]["Enums"]["shelf_label"]
           spine_color?: string | null
@@ -113,9 +146,12 @@ export type Database = {
           created_at?: string
           current_page?: number | null
           date_read?: string | null
+          epub_path?: string | null
           id?: string
           is_favorite?: boolean
           rating?: number | null
+          reader_cfi?: string | null
+          reader_percent?: number | null
           review?: string | null
           shelf?: Database["public"]["Enums"]["shelf_label"]
           spine_color?: string | null
