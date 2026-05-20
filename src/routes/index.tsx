@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Sparkles, BookMarked } from "lucide-react";
+import { BookOpen, Sparkles, BookMarked, Flame, Bookmark, type LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Landing,
