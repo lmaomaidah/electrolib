@@ -112,10 +112,31 @@ function Landing() {
         </div>
       </main>
 
+      {/* Feature cards */}
+      <section className="relative z-10 mx-auto max-w-7xl px-6 pb-20">
+        <div className="grid gap-5 md:grid-cols-3">
+          {[
+            { icon: BookMarked, title: "Every shelf, your way", body: "Currently reading, read, want-to-read. Drag a book between shelves with a click." },
+            { icon: BookOpen, title: "A reader that feels like paper", body: "Upload an .epub and read in a warm, two-page spread. Progress saves itself." },
+            { icon: Sparkles, title: "Import from Goodreads", body: "Drop your CSV and we'll bind every spine onto your shelf — no fuss." },
+          ].map(({ icon: Icon, title, body }) => (
+            <div key={title} className="group relative overflow-hidden rounded-3xl border border-walnut/15 bg-aged/80 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gold/20 blur-2xl transition group-hover:bg-gold/30" />
+              <span className="inline-grid h-11 w-11 place-items-center rounded-2xl bg-mahogany text-aged shadow-md">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-4 font-display text-2xl text-walnut">{title}</h3>
+              <p className="mt-2 font-serif text-sm leading-relaxed text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Quote footer */}
       <footer className="relative z-10 mx-auto max-w-3xl px-6 pb-20 text-center">
+        <div className="mx-auto mb-6 h-px w-24 bg-walnut/20" />
         <p className="font-serif italic text-xl leading-relaxed text-walnut">
-          “A room without books is like a body without a soul.”
+          &ldquo;A room without books is like a body without a soul.&rdquo;
         </p>
         <p className="mt-2 font-hand text-mahogany">— Cicero</p>
       </footer>
