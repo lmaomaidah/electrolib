@@ -109,15 +109,20 @@ function ShelfPage() {
         ) : rows.length === 0 ? (
           <EmptyLibrary onAdd={() => setShowAdd(true)} />
         ) : (
-          <div className="space-y-3 pt-6">
-            {SHELF_ORDER.map(({ key, label }) => {
-              const items = grouped[key];
-              if (items.length === 0) return null;
-              return (
-                <ShelfRow key={key} label={label} books={items} onOpen={setOpen} onFav={(r) => toggleFav.mutate(r)} />
-              );
-            })}
-          </div>
+          <TooltipProvider delayDuration={150}>
+            <div className="space-y-6 pt-6">
+              {(Object.keys(SHELF_LABELS) as Shelf[]).map((key) => {
+                const items = grouped[key];
+                if (items.length === 0) return null;
+                return (
+                  <ShelfSection
+                    key={key} shelfKey={key} label={SHELF_LABELS[key]} books={items}
+                    onOpen={setOpen} onFav={(r) => toggleFav.mutate(r)}
+                  />
+                );
+              })}
+            </div>
+          </TooltipProvider>
         )}
       </div>
 
@@ -127,51 +132,115 @@ function ShelfPage() {
   );
 }
 
-function ShelfRow({ label, books, onOpen, onFav }: {
-  label: string; books: Row[];
+/* compute thicker spines so vertical text never overflows */
+function spineDims(title: string, index: number) {
+  const len = title.length;
+  // Width grows with title length so it never looks skinny under heavy text
+  const w = Math.round(Math.max(30, Math.min(54, 28 + len * 0.7)));
+  // Height grows with title length so vertical text has room
+  const baseH = 160 + ((index * 7) % 28);
+  const neededH = 60 + len * 7; // ~7px per char in vertical-rl at text-[10px]
+  const h = Math.min(220, Math.max(baseH, neededH));
+  return { w, h };
+}
+
+function chunkRows(books: Row[], maxWidth: number) {
+  const out: Row[][] = [];
+  let row: Row[] = [];
+  let used = 0;
+  const gap = 4;
+  for (let i = 0; i < books.length; i++) {
+    const { w } = spineDims(books[i].book.title, i);
+    if (used + w + gap > maxWidth && row.length > 0) {
+      out.push(row); row = []; used = 0;
+    }
+    row.push(books[i]);
+    used += w + gap;
+  }
+  if (row.length) out.push(row);
+  return out;
+}
+
+function ShelfSection({ shelfKey, label, books, onOpen, onFav }: {
+  shelfKey: Shelf; label: string; books: Row[];
   onOpen: (r: Row) => void; onFav: (r: Row) => void;
 }) {
-  return (
-    <div className="relative">
-      <div className="shelf-glow absolute -top-4 left-0 right-0 h-10" />
-      <div className="relative flex items-end gap-1 overflow-x-auto px-12 pb-1 md:overflow-visible">
-        {/* Wood label tab */}
-        <div className="wood-label absolute left-0 top-1/2 z-10 -translate-y-1/2 -rotate-3 px-3 py-1.5">
-          <span className="font-hand text-sm text-walnut">{label}</span>
-        </div>
+  const ref = useRef<HTMLDivElement>(null);
+  const [maxW, setMaxW] = useState(900);
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver((entries) => {
+      // Subtract padding for wood-label tab on the left
+      setMaxW(Math.max(200, entries[0].contentRect.width - 130));
+    });
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
 
-        {books.map((r, i) => (
-          <BookSpineEl key={r.id} r={r} index={i} onOpen={() => onOpen(r)} onFav={() => onFav(r)} />
+  const rows = useMemo(() => chunkRows(books, maxW), [books, maxW]);
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="wood-label absolute -left-1 top-3 z-20 -rotate-3 px-3 py-1.5 shadow-lg">
+        <span className="font-hand text-sm text-walnut">{label}</span>
+      </div>
+      <div className="space-y-1 pl-28">
+        {rows.map((rowBooks, rIdx) => (
+          <div key={rIdx} className="relative">
+            <div className="shelf-glow absolute -top-4 left-0 right-0 h-10" />
+            <div className="shelf-row-3d relative flex items-end gap-1 pb-1 pr-2">
+              {rowBooks.map((r, i) => (
+                <BookSpineEl
+                  key={r.id} r={r}
+                  index={rIdx * 100 + i}
+                  shelfLabel={SHELF_LABELS[shelfKey]}
+                  onOpen={() => onOpen(r)} onFav={() => onFav(r)}
+                />
+              ))}
+            </div>
+            <div className="shelf-plank h-5 rounded-b-sm" />
+          </div>
         ))}
       </div>
-      <div className="shelf-plank h-5" />
     </div>
   );
 }
 
-function BookSpineEl({ r, index, onOpen, onFav }: { r: Row; index: number; onOpen: () => void; onFav: () => void }) {
+function BookSpineEl({ r, index, shelfLabel, onOpen, onFav }: {
+  r: Row; index: number; shelfLabel: string; onOpen: () => void; onFav: () => void;
+}) {
   const color = r.spine_color ?? SPINE_COLORS[index % SPINE_COLORS.length];
   const text = isLight(color) ? "#1A1208" : "#FAF7F2";
-  const w = 24 + ((r.book.title.length * 1.3) % 18);
-  const h = 150 + ((index * 7) % 30);
+  const { w, h } = spineDims(r.book.title, index);
 
   return (
-    <button
-      onClick={onOpen}
-      className="book-spine slide-in relative flex flex-shrink-0 cursor-pointer flex-col items-center justify-between py-3"
-      style={{ width: w, height: h, backgroundColor: color, color: text, animationDelay: `${index * 40}ms` }}
-      title={`${r.book.title} — ${r.book.author ?? ""}`}
-    >
-      {r.is_favorite && (
-        <span onClick={(e) => { e.stopPropagation(); onFav(); }} className="absolute -top-1 right-1">
-          <Heart className="h-3.5 w-3.5 fill-rose text-rose" />
-        </span>
-      )}
-      <span className="line-clamp-3 px-1 text-center font-accent text-[10px] leading-tight tracking-wider [writing-mode:vertical-rl] rotate-180">
-        {r.book.title.toUpperCase()}
-      </span>
-      <span className="line-clamp-1 px-1 font-serif text-[8px] opacity-80">{r.book.author ?? ""}</span>
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onOpen}
+          className="book-spine slide-in relative flex flex-shrink-0 cursor-pointer flex-col items-center justify-between py-3"
+          style={{ width: w, height: h, backgroundColor: color, color: text, animationDelay: `${(index % 20) * 40}ms` }}
+        >
+          {r.is_favorite && (
+            <span onClick={(e) => { e.stopPropagation(); onFav(); }} className="absolute -top-1 right-1">
+              <Heart className="h-3.5 w-3.5 fill-rose text-rose" />
+            </span>
+          )}
+          <span className="overflow-hidden px-1 text-center font-accent text-[10px] leading-tight tracking-wider [writing-mode:vertical-rl] rotate-180">
+            {r.book.title.toUpperCase()}
+          </span>
+          <span className="line-clamp-1 px-1 font-serif text-[8px] opacity-80">{r.book.author ?? ""}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[240px] bg-walnut text-aged">
+        <div className="font-display text-sm">{r.book.title}</div>
+        {r.book.author && <div className="font-serif text-xs italic opacity-80">{r.book.author}</div>}
+        <div className="mt-1 font-hand text-[11px] text-gold">{shelfLabel}</div>
+        {r.reader_percent != null && (
+          <div className="mt-0.5 font-serif text-[11px] opacity-80">{Math.round(r.reader_percent * 100)}% read</div>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
