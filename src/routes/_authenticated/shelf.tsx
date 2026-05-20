@@ -244,6 +244,27 @@ function BookSpineEl({ r, index, shelfLabel, onOpen, onFav }: {
   );
 }
 
+function QuickReadingToggle({ row, onDone }: { row: Row; onDone: () => void }) {
+  const isReading = row.shelf === "currently-reading";
+  async function toggle() {
+    const next: Shelf = isReading ? "want-to-read" : "currently-reading";
+    const { error } = await supabase.from("user_books").update({ shelf: next }).eq("id", row.id);
+    if (error) return toast.error(error.message);
+    toast.success(isReading ? "Removed from currently reading" : "Now in currently reading");
+    onDone();
+  }
+  return (
+    <button
+      onClick={toggle}
+      className="inline-flex items-center gap-1 rounded-full border border-walnut/30 bg-aged px-4 py-2 font-serif text-sm text-walnut hover:bg-parchment"
+    >
+      {isReading
+        ? (<><BookmarkMinus className="h-4 w-4" /> Stop reading</>)
+        : (<><BookmarkPlus className="h-4 w-4" /> Mark currently reading</>)}
+    </button>
+  );
+}
+
 function EmptyLibrary({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="px-6 py-24 text-center">
