@@ -123,10 +123,12 @@ function Landing() {
   );
 }
 
-function Feature({ icon, text }: { icon: string; text: string }) {
+function Feature({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-lg">{icon}</span>
+      <span className="grid h-8 w-8 place-items-center rounded-full bg-parchment text-mahogany shadow-sm">
+        <Icon className="h-4 w-4" />
+      </span>
       <span>{text}</span>
     </div>
   );
