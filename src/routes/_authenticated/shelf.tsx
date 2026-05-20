@@ -22,10 +22,19 @@ type Row = {
   current_page: number | null;
   total_pages: number | null;
   date_read: string | null;
+  reader_cfi: string | null;
+  reader_percent: number | null;
+  epub_path: string | null;
   book: {
     id: string; title: string; author: string | null; cover_url: string | null;
     description: string | null; genre: string | null; avg_rating: number | null;
   };
+};
+
+const SHELF_LABELS: Record<Shelf, string> = {
+  "currently-reading": "Currently reading",
+  "read": "Read",
+  "want-to-read": "Want to read",
 };
 
 const SHELF_ORDER: { key: Shelf; label: string }[] = [
