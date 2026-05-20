@@ -62,14 +62,21 @@ function ReaderPage() {
       await rendition.display(ub.reader_cfi || undefined);
 
       await book.locations.generate(1600);
+      const totalPages = book.locations.length();
 
       rendition.on("relocated", async (loc: any) => {
         const cfi = loc?.start?.cfi as string | undefined;
         const pct = typeof loc?.start?.percentage === "number" ? loc.start.percentage : null;
         if (pct != null) setProgress(Math.round(pct * 100));
         if (cfi) {
+          let pageNum: number | null = null;
+          try { pageNum = book.locations.locationFromCfi(cfi) as number; } catch { /* ignore */ }
           await supabase.from("user_books").update({
-            reader_cfi: cfi, reader_percent: pct,
+            reader_cfi: cfi,
+            reader_percent: pct,
+            current_page: pageNum,
+            total_pages: totalPages || null,
+            shelf: "currently-reading",
           }).eq("id", ub.id);
         }
       });
