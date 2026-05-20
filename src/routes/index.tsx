@@ -70,10 +70,10 @@ function Landing() {
             </span>
           </div>
 
-          <div className="mt-12 flex items-center gap-6 text-sm font-serif text-muted-foreground">
-            <Feature icon="📖" text="Track progress" />
-            <Feature icon="🕯️" text="Warm reader UI" />
-            <Feature icon="🔖" text="Personal reviews" />
+          <div className="mt-12 flex flex-wrap items-center gap-6 text-sm font-serif text-muted-foreground">
+            <Feature icon={BookOpen} text="Track progress" />
+            <Feature icon={Flame} text="Warm reader UI" />
+            <Feature icon={Bookmark} text="Personal reviews" />
           </div>
         </div>
 
