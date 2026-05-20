@@ -358,13 +358,16 @@ function BookModal({ row, onClose, onChange }: { row: Row; onClose: () => void; 
         </Block>
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <button onClick={remove} className="font-serif text-sm text-destructive hover:underline">Remove from shelf</button>
-          <div className="flex gap-2">
+          <button onClick={remove} className="inline-flex items-center gap-1 font-serif text-sm text-destructive hover:underline">
+            <X className="h-3.5 w-3.5" /> Remove from shelf
+          </button>
+          <div className="flex flex-wrap gap-2">
+            <QuickReadingToggle row={row} onDone={onChange} />
             <Link
               to="/read/$bookId" params={{ bookId: row.id }}
               className="inline-flex items-center gap-1 rounded-full bg-gold px-5 py-2 font-serif text-sm text-ink hover:opacity-90"
             >
-              <BookOpen className="h-4 w-4" /> Open reader
+              {row.reader_cfi ? (<><Play className="h-4 w-4" /> Resume</>) : (<><BookOpen className="h-4 w-4" /> Open reader</>)}
             </Link>
             <button onClick={onClose} className="rounded-full border border-border px-5 py-2 font-serif text-sm text-walnut hover:bg-parchment">Cancel</button>
             <button onClick={save} className="rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut">Save</button>
