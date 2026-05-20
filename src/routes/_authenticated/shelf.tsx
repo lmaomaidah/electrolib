@@ -59,7 +59,7 @@ function ShelfPage() {
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase
         .from("user_books")
-        .select("id,shelf,rating,review,is_favorite,spine_color,current_page,total_pages,date_read,book:books(id,title,author,cover_url,description,genre,avg_rating)")
+        .select("id,shelf,rating,review,is_favorite,spine_color,current_page,total_pages,date_read,reader_cfi,reader_percent,epub_path,book:books(id,title,author,cover_url,description,genre,avg_rating)")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
