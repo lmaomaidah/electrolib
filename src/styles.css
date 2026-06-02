@@ -40,12 +40,22 @@
   --color-sage: var(--sage);
   --color-rose: var(--rose);
   --color-aged: var(--aged);
+  /* Khaosiki-inspired playful palette */
+  --color-periwinkle: var(--periwinkle);
+  --color-periwinkle-deep: var(--periwinkle-deep);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-butter: var(--butter);
+  --color-midnight: var(--midnight);
+  --color-teal: var(--teal);
 
+  --font-chunky: "Bagel Fat One", "Henny Penny", cursive;
+  --font-rounded: "Fredoka", system-ui, sans-serif;
   --font-display: "Henny Penny", cursive;
-  --font-accent: "Mystery Quest", cursive;
+  --font-accent: "Bagel Fat One", cursive;
   --font-hand: "Crafty Girls", cursive;
   --font-serif: "EB Garamond", "Lora", Georgia, serif;
-  --font-sans: "Lora", Georgia, serif;
+  --font-sans: "Fredoka", "Lora", Georgia, serif;
 }
 
 :root {
@@ -61,6 +71,15 @@
   --sage: oklch(0.66 0.055 145);
   --rose: oklch(0.74 0.045 25);
   --aged: oklch(0.97 0.012 85);
+
+  /* Khaosiki playful palette */
+  --periwinkle: oklch(0.78 0.08 270);       /* soft blue background */
+  --periwinkle-deep: oklch(0.66 0.12 268);  /* deeper accent */
+  --coral: oklch(0.66 0.19 28);             /* primary red/coral #E8433A */
+  --coral-deep: oklch(0.55 0.20 28);
+  --butter: oklch(0.85 0.16 88);            /* warm yellow #F5C842 */
+  --midnight: oklch(0.18 0.015 270);        /* near-black bottom section */
+  --teal: oklch(0.45 0.08 195);             /* WELCOME card */
 
   --background: var(--cream);
   --foreground: var(--ink);
@@ -124,9 +143,49 @@
 
 @layer utilities {
   .font-display { font-family: var(--font-display); }
+  .font-chunky { font-family: var(--font-chunky); letter-spacing: 0.01em; }
+  .font-rounded { font-family: var(--font-rounded); }
   .font-accent { font-family: var(--font-accent); }
   .font-hand { font-family: var(--font-hand); }
   .font-serif { font-family: var(--font-serif); }
+
+  /* Chunky outlined display text (Khaosiki vibe) */
+  .text-stroke-white {
+    -webkit-text-stroke: 3px #fff;
+    paint-order: stroke fill;
+  }
+  .text-stroke-ink {
+    -webkit-text-stroke: 3px #111;
+    paint-order: stroke fill;
+  }
+  .text-shadow-pop {
+    text-shadow:
+      0 4px 0 rgba(0,0,0,0.18),
+      0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  /* Bobbing animation for illustrated elements */
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(var(--bob-r, 0deg)); }
+    50%      { transform: translateY(-10px) rotate(var(--bob-r, 0deg)); }
+  }
+  .bob { animation: bob 4s ease-in-out infinite; }
+  .bob-slow { animation: bob 6s ease-in-out infinite; }
+  .bob-fast { animation: bob 3s ease-in-out infinite; }
+
+  /* Soft tilt cards */
+  .tilt-l { transform: rotate(-2.5deg); }
+  .tilt-r { transform: rotate(2.5deg); }
+  .tilt-l-sm { transform: rotate(-1deg); }
+  .tilt-r-sm { transform: rotate(1deg); }
+
+  /* Card pop shadow */
+  .pop-shadow {
+    box-shadow:
+      0 2px 0 rgba(0,0,0,0.08),
+      0 18px 30px -10px rgba(20,20,60,0.35);
+  }
+
 
   /* Wood plank — walnut shelf */
   .shelf-plank {

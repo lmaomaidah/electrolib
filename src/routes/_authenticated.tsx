@@ -27,13 +27,13 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 z-20 hidden h-screen w-20 flex-col items-center justify-between border-r border-border bg-aged py-6 md:flex">
+    <div className="flex min-h-screen bg-background font-rounded">
+      <aside className="sticky top-0 z-20 hidden h-screen w-20 flex-col items-center justify-between border-r-2 border-midnight/10 bg-coral py-6 md:flex">
         <div className="flex flex-col items-center gap-8">
-          <Link to="/" className="flex flex-col items-center">
-            <BookMarked className="h-7 w-7 text-mahogany" />
+          <Link to="/" className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-white">
+            <BookMarked className="h-5 w-5" />
           </Link>
-          <nav className="flex flex-col items-center gap-2">
+          <nav className="flex flex-col items-center gap-1">
             <NavIcon to="/dashboard" icon={Home} label="Home" />
             <NavIcon to="/shelf" icon={Library} label="Shelf" />
             <NavIcon to="/discover" icon={Compass} label="Discover" />
@@ -45,14 +45,14 @@ function AuthenticatedLayout() {
           <button
             onClick={toggle}
             title={theme === "dark" ? "Candlelight" : "Midnight study"}
-            className="rounded-full p-3 text-walnut/60 hover:bg-parchment hover:text-walnut"
+            className="rounded-full p-3 text-white/70 hover:bg-white/15 hover:text-white"
           >
             {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           <button
             onClick={signOut}
             title={email}
-            className="rounded-full p-3 text-walnut/60 hover:bg-parchment hover:text-walnut"
+            className="rounded-full p-3 text-white/70 hover:bg-white/15 hover:text-white"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -63,13 +63,13 @@ function AuthenticatedLayout() {
         <Outlet />
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-20 flex justify-around border-t border-border bg-aged py-3 md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-20 flex justify-around border-t-2 border-midnight/10 bg-coral py-3 md:hidden">
         <NavIcon to="/dashboard" icon={Home} label="Home" />
         <NavIcon to="/shelf" icon={Library} label="Shelf" />
         <NavIcon to="/discover" icon={Compass} label="Discover" />
         <NavIcon to="/friends" icon={Users} label="Friends" />
         <NavIcon to="/settings" icon={Settings} label="Settings" />
-        <button onClick={toggle} className="rounded-full p-2 text-walnut/60">
+        <button onClick={toggle} className="rounded-full p-2 text-white/80">
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
       </nav>
@@ -86,11 +86,11 @@ function NavIcon({
   return (
     <Link
       to={to}
-      activeProps={{ className: "bg-mahogany text-aged" }}
-      className="group relative rounded-full p-3 text-walnut/60 transition hover:bg-parchment hover:text-walnut"
+      activeProps={{ className: "bg-white text-coral" }}
+      className="group relative rounded-full p-3 text-white/80 transition hover:bg-white/15 hover:text-white"
     >
       <Icon className="h-5 w-5" />
-      <span className="pointer-events-none absolute left-full top-1/2 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded bg-walnut px-2 py-1 font-hand text-xs text-aged group-hover:block md:opacity-0 md:group-hover:opacity-100">
+      <span className="pointer-events-none absolute left-full top-1/2 ml-3 hidden -translate-y-1/2 whitespace-nowrap rounded-full bg-midnight px-2.5 py-1 font-rounded text-xs font-semibold text-white group-hover:block md:opacity-0 md:group-hover:opacity-100">
         {label}
       </span>
     </Link>
