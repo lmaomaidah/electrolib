@@ -143,9 +143,49 @@
 
 @layer utilities {
   .font-display { font-family: var(--font-display); }
+  .font-chunky { font-family: var(--font-chunky); letter-spacing: 0.01em; }
+  .font-rounded { font-family: var(--font-rounded); }
   .font-accent { font-family: var(--font-accent); }
   .font-hand { font-family: var(--font-hand); }
   .font-serif { font-family: var(--font-serif); }
+
+  /* Chunky outlined display text (Khaosiki vibe) */
+  .text-stroke-white {
+    -webkit-text-stroke: 3px #fff;
+    paint-order: stroke fill;
+  }
+  .text-stroke-ink {
+    -webkit-text-stroke: 3px #111;
+    paint-order: stroke fill;
+  }
+  .text-shadow-pop {
+    text-shadow:
+      0 4px 0 rgba(0,0,0,0.18),
+      0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  /* Bobbing animation for illustrated elements */
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(var(--bob-r, 0deg)); }
+    50%      { transform: translateY(-10px) rotate(var(--bob-r, 0deg)); }
+  }
+  .bob { animation: bob 4s ease-in-out infinite; }
+  .bob-slow { animation: bob 6s ease-in-out infinite; }
+  .bob-fast { animation: bob 3s ease-in-out infinite; }
+
+  /* Soft tilt cards */
+  .tilt-l { transform: rotate(-2.5deg); }
+  .tilt-r { transform: rotate(2.5deg); }
+  .tilt-l-sm { transform: rotate(-1deg); }
+  .tilt-r-sm { transform: rotate(1deg); }
+
+  /* Card pop shadow */
+  .pop-shadow {
+    box-shadow:
+      0 2px 0 rgba(0,0,0,0.08),
+      0 18px 30px -10px rgba(20,20,60,0.35);
+  }
+
 
   /* Wood plank — walnut shelf */
   .shelf-plank {
