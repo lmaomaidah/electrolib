@@ -72,6 +72,15 @@
   --rose: oklch(0.74 0.045 25);
   --aged: oklch(0.97 0.012 85);
 
+  /* Khaosiki playful palette */
+  --periwinkle: oklch(0.78 0.08 270);       /* soft blue background */
+  --periwinkle-deep: oklch(0.66 0.12 268);  /* deeper accent */
+  --coral: oklch(0.66 0.19 28);             /* primary red/coral #E8433A */
+  --coral-deep: oklch(0.55 0.20 28);
+  --butter: oklch(0.85 0.16 88);            /* warm yellow #F5C842 */
+  --midnight: oklch(0.18 0.015 270);        /* near-black bottom section */
+  --teal: oklch(0.45 0.08 195);             /* WELCOME card */
+
   --background: var(--cream);
   --foreground: var(--ink);
   --card: var(--aged);
