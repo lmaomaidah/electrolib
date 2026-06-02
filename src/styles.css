@@ -40,12 +40,22 @@
   --color-sage: var(--sage);
   --color-rose: var(--rose);
   --color-aged: var(--aged);
+  /* Khaosiki-inspired playful palette */
+  --color-periwinkle: var(--periwinkle);
+  --color-periwinkle-deep: var(--periwinkle-deep);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-butter: var(--butter);
+  --color-midnight: var(--midnight);
+  --color-teal: var(--teal);
 
+  --font-chunky: "Bagel Fat One", "Henny Penny", cursive;
+  --font-rounded: "Fredoka", system-ui, sans-serif;
   --font-display: "Henny Penny", cursive;
-  --font-accent: "Mystery Quest", cursive;
+  --font-accent: "Bagel Fat One", cursive;
   --font-hand: "Crafty Girls", cursive;
   --font-serif: "EB Garamond", "Lora", Georgia, serif;
-  --font-sans: "Lora", Georgia, serif;
+  --font-sans: "Fredoka", "Lora", Georgia, serif;
 }
 
 :root {
