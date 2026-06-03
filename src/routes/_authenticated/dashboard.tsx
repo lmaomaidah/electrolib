@@ -148,7 +148,11 @@ function Dashboard() {
 
 function SeriesCard({ b }: { b: UserBook }) {
   return (
-    <Link to="/shelf" className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md">
+    <Link
+      to="/books/$bookId"
+      params={{ bookId: b.book.id }}
+      className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md"
+    >
       <div
         className="flex h-32 items-end p-3"
         style={{ background: `linear-gradient(135deg, ${b.spine_color ?? "#5C3D2E"}, #2d1d14)` }}
