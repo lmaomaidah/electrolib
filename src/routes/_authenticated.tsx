@@ -5,9 +5,10 @@ import { useTheme } from "@/components/theme-provider";
 import { Home, Library, Compass, Users, Settings, LogOut, BookMarked, Sun, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
+  ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/auth" });
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
   },
   component: AuthenticatedLayout,
 });

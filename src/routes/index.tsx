@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BookOpen, BookMarked, Calendar, Users, Search, ChevronLeft, ChevronRight,
-  Instagram, Facebook, Twitter, ArrowRight, Star, ChevronDown, Library,
+  Github, Linkedin, ArrowRight, Star, ChevronDown, Library,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -59,24 +59,26 @@ function Landing() {
           <div className="rounded-full border-2 border-white/60 bg-coral px-2 py-3 text-[10px] font-bold tracking-[0.25em] text-white [writing-mode:vertical-rl] rotate-180">
             FOLLOW US
           </div>
-          {[Instagram, Facebook, Twitter].map((Icon, i) => (
-            <a key={i} href="#" className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-coral pop-shadow hover:scale-110 transition">
-              <Icon className="h-4 w-4" />
-            </a>
-          ))}
+          <a href="https://github.com/lmaomaidah" target="_blank" rel="noreferrer noopener" aria-label="GitHub" className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-coral pop-shadow hover:scale-110 transition">
+            <Github className="h-4 w-4" />
+          </a>
+          <a href="https://linkedin.com/in/maidahjunaid" target="_blank" rel="noreferrer noopener" aria-label="LinkedIn" className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-coral pop-shadow hover:scale-110 transition">
+            <Linkedin className="h-4 w-4" />
+          </a>
         </aside>
 
         {/* Hero */}
-        <div className="relative z-10 mx-auto mt-14 max-w-4xl px-4 text-center">
+        <div className="relative z-10 mx-auto mt-14 max-w-5xl px-4 text-center">
           <p className="font-hand text-lg text-white/90">Welcome to</p>
           <h1
-            className="font-chunky text-[clamp(3.5rem,12vw,9rem)] leading-[0.9] text-coral text-stroke-white text-shadow-pop"
+            className="font-chunky text-[clamp(2.75rem,9vw,7.5rem)] leading-[0.9] text-coral text-stroke-white text-shadow-pop"
             style={{ filter: "drop-shadow(0 6px 0 rgba(0,0,0,0.15))" }}
           >
-            THE LIBRARY!
+            <span className="block">ELECTRO</span>
+            <span className="block">LIBRARY!</span>
           </h1>
           <p className="mt-2 font-bold uppercase tracking-widest text-white/85 text-xs">
-            Editing Channel · est. 2025
+            A loud, friendly little library · est. 2025
           </p>
         </div>
 
@@ -85,9 +87,15 @@ function Landing() {
           <CardArrow side="left" />
           <CardArrow side="right" />
           <div className="grid gap-5 md:grid-cols-3">
-            <FeatureCard tilt="tilt-l-sm" label="BROWSE" title="BROWSE BOOKS" emoji={<BookStack />} body="Search 12,000+ titles. Filter by genre, mood, or what your neighbor just returned." />
-            <FeatureCard tilt="" label="JOIN" title="JOIN A CLUB" emoji={<ClubScene />} body="Weekly meetups for mystery lovers, poetry rookies, and everyone in between." />
-            <FeatureCard tilt="tilt-r-sm" label="EXPLORE" title="EXPLORE EVENTS" emoji={<EventScene />} body="Author talks, kids' story hour, late-night silent reading nights." />
+            <Link to="/discover" className="block">
+              <FeatureCard tilt="tilt-l-sm" label="BROWSE" title="BROWSE BOOKS" emoji={<BookStack />} body="Search 12,000+ titles. Filter by genre, mood, or what your neighbor just returned." />
+            </Link>
+            <Link to="/friends" className="block">
+              <FeatureCard tilt="" label="JOIN" title="JOIN A CLUB" emoji={<ClubScene />} body="Weekly meetups for mystery lovers, poetry rookies, and everyone in between." />
+            </Link>
+            <Link to="/dashboard" className="block">
+              <FeatureCard tilt="tilt-r-sm" label="EXPLORE" title="EXPLORE EVENTS" emoji={<EventScene />} body="Author talks, kids' story hour, late-night silent reading nights." />
+            </Link>
           </div>
         </div>
 
@@ -140,14 +148,16 @@ function Landing() {
 
       {/* ───── Giant brand break ───── */}
       <section className="relative bg-periwinkle pb-2">
-        <div className="mx-auto max-w-7xl px-2">
-          <h2 className="font-chunky text-center text-[clamp(4rem,16vw,11rem)] leading-[0.85] text-shadow-pop">
-            <span className="text-coral text-stroke-white">ELECTRO</span>
-            <span className="text-butter text-stroke-white">LIB</span>
-            <span className="text-white text-stroke-ink">RARY</span>
-            <span className="text-coral text-stroke-white">!</span>
+        <div className="mx-auto max-w-7xl px-4">
+          <h2 className="font-chunky text-center text-[clamp(3rem,11vw,9rem)] leading-[0.85] text-shadow-pop">
+            <span className="block text-coral text-stroke-white">ELECTRO</span>
+            <span className="block">
+              <span className="text-butter text-stroke-white">LIB</span>
+              <span className="text-white text-stroke-ink">RARY</span>
+              <span className="text-coral text-stroke-white">!</span>
+            </span>
           </h2>
-          <p className="-mt-2 text-center font-hand text-lg text-coral">New arrivals every week!</p>
+          <p className="mt-2 text-center font-hand text-lg text-coral">New arrivals every week!</p>
         </div>
       </section>
 
