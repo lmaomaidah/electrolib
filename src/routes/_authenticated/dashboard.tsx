@@ -51,10 +51,19 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 pb-24 md:py-12">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-4">
+      <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = searchQ.trim();
+            navigate({ to: "/discover", search: q ? { q } : undefined });
+          }}
+          className="flex items-center justify-between gap-4"
+        >
         <div className="flex flex-1 items-center gap-3 rounded-full border border-border bg-aged px-4 py-2.5 max-w-md">
           <Search className="h-4 w-4 text-muted-foreground" />
           <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
             placeholder="Search book name, author, edition…"
             className="flex-1 bg-transparent font-serif text-sm outline-none placeholder:text-muted-foreground/70"
           />
