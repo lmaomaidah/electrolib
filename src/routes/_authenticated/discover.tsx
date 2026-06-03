@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const searchSchema = z.object({ q: z.string().optional() });
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
+  validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Discover — find your next read" }] }),
 });
 
