@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const searchSchema = z.object({ q: z.string().optional() });
 
 export const Route = createFileRoute("/_authenticated/discover")({
   component: DiscoverPage,
+  validateSearch: searchSchema,
   head: () => ({ meta: [{ title: "Discover — find your next read" }] }),
 });
 
@@ -23,8 +27,15 @@ type OLDoc = {
 const SPINE_COLORS = ["#5C3D2E", "#8B4513", "#1A1208", "#C9A84C", "#7A9E7E", "#C4A4A4", "#3d2817", "#6b4226"];
 
 function DiscoverPage() {
-  const [q, setQ] = useState("");
-  const [submitted, setSubmitted] = useState("");
+  const { q: urlQ } = Route.useSearch();
+  const [q, setQ] = useState(urlQ ?? "");
+  const [submitted, setSubmitted] = useState(urlQ ?? "");
+  useEffect(() => {
+    if (urlQ && urlQ !== submitted) {
+      setQ(urlQ);
+      setSubmitted(urlQ);
+    }
+  }, [urlQ]);
   const qc = useQueryClient();
 
   const { data, isFetching } = useQuery({

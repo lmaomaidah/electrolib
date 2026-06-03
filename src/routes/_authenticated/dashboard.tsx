@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,8 @@ type UserBook = {
 };
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const [searchQ, setSearchQ] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null)); }, []);
 
@@ -49,10 +51,19 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 pb-24 md:py-12">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-4">
+      <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = searchQ.trim();
+            navigate({ to: "/discover", search: q ? { q } : undefined });
+          }}
+          className="flex items-center justify-between gap-4"
+        >
         <div className="flex flex-1 items-center gap-3 rounded-full border border-border bg-aged px-4 py-2.5 max-w-md">
           <Search className="h-4 w-4 text-muted-foreground" />
           <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
             placeholder="Search book name, author, edition…"
             className="flex-1 bg-transparent font-serif text-sm outline-none placeholder:text-muted-foreground/70"
           />
@@ -66,7 +77,7 @@ function Dashboard() {
             <span className="hidden font-serif text-sm text-walnut sm:block">{name}</span>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Greeting */}
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr,1fr]">
@@ -148,7 +159,11 @@ function Dashboard() {
 
 function SeriesCard({ b }: { b: UserBook }) {
   return (
-    <Link to="/shelf" className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md">
+    <Link
+      to="/books/$bookId"
+      params={{ bookId: b.book.id }}
+      className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md"
+    >
       <div
         className="flex h-32 items-end p-3"
         style={{ background: `linear-gradient(135deg, ${b.spine_color ?? "#5C3D2E"}, #2d1d14)` }}
@@ -278,7 +293,7 @@ function CurrentlyReading({ b }: { b: UserBook }) {
       </div>
       <div className="flex flex-col justify-center">
         <span className="font-hand text-sm text-mahogany">currently reading</span>
-        <h2 className="mt-1 font-display text-3xl text-ink">{b.book.title}</h2>
+        <Link to="/books/$bookId" params={{ bookId: b.book.id }} className="mt-1 block font-display text-3xl text-ink hover:text-mahogany">{b.book.title}</Link>
         <p className="mt-1 font-serif text-sm text-muted-foreground">by {b.book.author ?? "Unknown"}</p>
         {b.book.description && (
           <p className="mt-3 line-clamp-3 font-serif text-sm leading-relaxed text-foreground/80">{b.book.description}</p>
@@ -314,7 +329,8 @@ function EmptyCurrent() {
 function BookCover({ b }: { b: UserBook }) {
   return (
     <Link
-      to="/shelf"
+      to="/books/$bookId"
+      params={{ bookId: b.book.id }}
       className="group flex w-32 flex-shrink-0 flex-col"
     >
       <div
@@ -322,7 +338,7 @@ function BookCover({ b }: { b: UserBook }) {
         style={{ backgroundColor: b.spine_color ?? "#5C3D2E", color: "#FAF7F2" }}
       >
         {b.book.cover_url ? (
-          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded object-cover" />
+          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded object-cover" loading="lazy" />
         ) : (
           <>
             <span className="font-display text-sm leading-tight">{b.book.title}</span>
