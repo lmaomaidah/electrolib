@@ -77,7 +77,7 @@ function Dashboard() {
             <span className="hidden font-serif text-sm text-walnut sm:block">{name}</span>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* Greeting */}
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr,1fr]">
