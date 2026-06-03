@@ -314,7 +314,8 @@ function EmptyCurrent() {
 function BookCover({ b }: { b: UserBook }) {
   return (
     <Link
-      to="/shelf"
+      to="/books/$bookId"
+      params={{ bookId: b.book.id }}
       className="group flex w-32 flex-shrink-0 flex-col"
     >
       <div
@@ -322,7 +323,7 @@ function BookCover({ b }: { b: UserBook }) {
         style={{ backgroundColor: b.spine_color ?? "#5C3D2E", color: "#FAF7F2" }}
       >
         {b.book.cover_url ? (
-          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded object-cover" />
+          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded object-cover" loading="lazy" />
         ) : (
           <>
             <span className="font-display text-sm leading-tight">{b.book.title}</span>
