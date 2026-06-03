@@ -293,7 +293,7 @@ function CurrentlyReading({ b }: { b: UserBook }) {
       </div>
       <div className="flex flex-col justify-center">
         <span className="font-hand text-sm text-mahogany">currently reading</span>
-        <h2 className="mt-1 font-display text-3xl text-ink">{b.book.title}</h2>
+        <Link to="/books/$bookId" params={{ bookId: b.book.id }} className="mt-1 block font-display text-3xl text-ink hover:text-mahogany">{b.book.title}</Link>
         <p className="mt-1 font-serif text-sm text-muted-foreground">by {b.book.author ?? "Unknown"}</p>
         {b.book.description && (
           <p className="mt-3 line-clamp-3 font-serif text-sm leading-relaxed text-foreground/80">{b.book.description}</p>
