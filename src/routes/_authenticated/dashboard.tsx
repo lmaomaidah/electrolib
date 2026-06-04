@@ -6,7 +6,7 @@ import { ArrowRight, Bell, Search, BookOpen, Highlighter, MessageCircle } from "
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Dashboard — The Shelf" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — ElectroLibrary" }] }),
 });
 
 type Profile = { display_name: string | null; avatar_url: string | null; reading_goal: number | null };
@@ -49,109 +49,104 @@ function Dashboard() {
   const name = profile?.display_name ?? "reader";
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-8 pb-24 md:py-12">
-      {/* Top bar */}
-      <form
+    <div className="min-h-screen bg-periwinkle font-rounded">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-24 md:px-8 md:py-10">
+        {/* Top bar */}
+        <form
           onSubmit={(e) => {
             e.preventDefault();
             const q = searchQ.trim();
             navigate({ to: "/discover", search: q ? { q } : undefined });
           }}
-          className="flex items-center justify-between gap-4"
+          className="flex items-center justify-between gap-3"
         >
-        <div className="flex flex-1 items-center gap-3 rounded-full border border-border bg-aged px-4 py-2.5 max-w-md">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <input
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            placeholder="Search book name, author, edition…"
-            className="flex-1 bg-transparent font-serif text-sm outline-none placeholder:text-muted-foreground/70"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="rounded-full p-2 text-walnut/70 hover:bg-aged"><Bell className="h-5 w-5" /></button>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-aged px-3 py-1.5">
-            <div className="grid h-7 w-7 place-items-center rounded-full bg-mahogany font-display text-aged text-sm">
-              {name[0]?.toUpperCase()}
-            </div>
-            <span className="hidden font-serif text-sm text-walnut sm:block">{name}</span>
+          <div className="flex flex-1 max-w-md items-center gap-2 rounded-full border-2 border-white/50 bg-white px-4 py-2 pop-shadow">
+            <Search className="h-4 w-4 text-midnight/50" />
+            <input
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder="Search a book, author, vibe…"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-midnight/40"
+            />
           </div>
-        </div>
-      </form>
+          <div className="flex items-center gap-2">
+            <button type="button" className="grid h-10 w-10 place-items-center rounded-full bg-white/80 text-coral pop-shadow hover:bg-white"><Bell className="h-4 w-4" /></button>
+            <div className="flex items-center gap-2 rounded-full bg-coral px-3 py-1.5 pop-shadow">
+              <div className="grid h-7 w-7 place-items-center rounded-full bg-butter font-chunky text-midnight text-sm">
+                {name[0]?.toUpperCase()}
+              </div>
+              <span className="hidden text-sm font-bold text-white sm:block">{name}</span>
+            </div>
+          </div>
+        </form>
 
-      {/* Greeting */}
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr,1fr]">
-        <section>
-          <h1 className="font-display text-5xl text-ink md:text-6xl">
-            Happy reading,
-            <br />
-            <span className="text-mahogany">{name}</span>
+        {/* Hero greeting */}
+        <div className="mt-8 rounded-3xl bg-coral p-6 pop-shadow text-white tilt-l-sm md:p-8">
+          <p className="font-hand text-white/90">Happy reading,</p>
+          <h1 className="font-chunky text-[clamp(2.25rem,7vw,4.5rem)] leading-[0.9] text-stroke-white text-shadow-pop">
+            {name.toUpperCase()}!
           </h1>
-          <p className="mt-4 max-w-xl font-serif text-muted-foreground">
+          <p className="mt-2 max-w-xl text-sm text-white/85">
             {books.length === 0
               ? "Your shelves are waiting. Add your first book to begin a beautiful little library."
               : `You have ${books.length} ${books.length === 1 ? "book" : "books"} on your shelves. Keep the story going.`}
           </p>
+        </div>
 
-          {current ? <CurrentlyReading b={current} /> : <EmptyCurrent />}
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr,1fr]">
+          <section>
+            {current ? <CurrentlyReading b={current} /> : <EmptyCurrent />}
 
-          {/* Popular now */}
-          <h2 className="mt-12 font-display text-2xl text-walnut">Popular now</h2>
-          {popular.length > 0 ? (
-            <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
-              {popular.map((b) => (
-                <BookCover key={b.id} b={b} />
-              ))}
+            <h2 className="mt-10 font-chunky text-2xl text-midnight">POPULAR NOW</h2>
+            {popular.length > 0 ? (
+              <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
+                {popular.map((b) => <BookCover key={b.id} b={b} />)}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-midnight/70">
+                Nothing here yet — head to your <Link to="/shelf" className="font-bold text-coral underline">shelf</Link> to add a book.
+              </p>
+            )}
+
+            <div className="mt-10 flex items-baseline justify-between">
+              <h2 className="font-chunky text-2xl text-midnight">YOUR COLLECTIONS</h2>
+              <Link to="/shelf" className="font-hand text-sm text-coral hover:underline">see all →</Link>
             </div>
-          ) : (
-            <p className="mt-4 font-serif text-sm text-muted-foreground">
-              Nothing here yet — head to your <Link to="/shelf" className="text-mahogany underline">shelf</Link> to add a book.
-            </p>
-          )}
+            {books.length > 0 ? (
+              <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+                {books.slice(0, 3).map((b) => <SeriesCard key={`series-${b.id}`} b={b} />)}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm italic text-midnight/60">
+                Your collections will appear here as your library grows.
+              </p>
+            )}
+          </section>
 
-          {/* New series collection */}
-          <div className="mt-12 flex items-baseline justify-between">
-            <h2 className="font-display text-2xl text-walnut">New series collection</h2>
-            <Link to="/shelf" className="font-hand text-sm text-mahogany hover:underline">see all</Link>
-          </div>
-          {books.length > 0 ? (
-            <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
-              {books.slice(0, 3).map((b) => (
-                <SeriesCard key={`series-${b.id}`} b={b} />
-              ))}
+          <aside className="space-y-5">
+            <div className="rounded-3xl bg-butter p-5 pop-shadow tilt-r-sm">
+              <div className="flex items-center justify-between">
+                <h3 className="font-chunky text-xl text-midnight">READING GOAL</h3>
+                <span className="font-hand text-sm text-coral">{profile?.reading_goal ?? 12} books</span>
+              </div>
+              <ProgressRing read={books.filter((b) => b.shelf === "read").length} goal={profile?.reading_goal ?? 12} />
             </div>
-          ) : (
-            <p className="mt-4 font-serif text-sm italic text-muted-foreground">
-              Your collections will appear here as your library grows.
-            </p>
-          )}
-        </section>
 
-        {/* Right rail */}
-        <aside className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-lg text-walnut">Reading goal</h3>
-              <span className="font-hand text-sm text-mahogany">{profile?.reading_goal ?? 12} books</span>
-            </div>
-            <ProgressRing read={books.filter((b) => b.shelf === "read").length} goal={profile?.reading_goal ?? 12} />
-          </div>
+            <ReadingSchedule />
+            <FriendsFeed />
 
-          <ReadingSchedule />
-
-          <FriendsFeed />
-
-          <Link
-            to="/shelf"
-            className="group flex items-center justify-between rounded-2xl bg-mahogany p-5 text-aged shadow-md transition hover:bg-walnut"
-          >
-            <div>
-              <p className="font-display text-xl">Visit your shelf</p>
-              <p className="font-hand text-sm opacity-80">see every spine, find a new chapter</p>
-            </div>
-            <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
-          </Link>
-        </aside>
+            <Link
+              to="/shelf"
+              className="group flex items-center justify-between rounded-3xl bg-midnight p-5 text-white pop-shadow transition hover:bg-midnight/90"
+            >
+              <div>
+                <p className="font-chunky text-xl">VISIT YOUR SHELF</p>
+                <p className="font-hand text-sm text-white/70">see every spine, find a new chapter</p>
+              </div>
+              <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
+            </Link>
+          </aside>
+        </div>
       </div>
     </div>
   );
@@ -162,17 +157,17 @@ function SeriesCard({ b }: { b: UserBook }) {
     <Link
       to="/books/$bookId"
       params={{ bookId: b.book.id }}
-      className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:shadow-md"
+      className="group overflow-hidden rounded-2xl bg-white pop-shadow transition hover:-translate-y-1"
     >
       <div
         className="flex h-32 items-end p-3"
         style={{ background: `linear-gradient(135deg, ${b.spine_color ?? "#5C3D2E"}, #2d1d14)` }}
       >
-        <span className="font-display text-lg leading-tight text-aged drop-shadow">{b.book.title}</span>
+        <span className="font-chunky text-lg leading-tight text-white drop-shadow">{b.book.title}</span>
       </div>
       <div className="p-3">
-        <p className="font-hand text-xs text-mahogany">collection</p>
-        <p className="line-clamp-1 font-serif text-sm text-walnut">{b.book.author ?? "Various authors"}</p>
+        <p className="font-hand text-xs text-coral">collection</p>
+        <p className="line-clamp-1 text-sm text-midnight">{b.book.author ?? "Various authors"}</p>
       </div>
     </Link>
   );
@@ -190,18 +185,16 @@ function ReadingSchedule() {
   }, [today, year]);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div className="rounded-3xl bg-white p-5 pop-shadow">
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-lg text-walnut">Reading schedule</h3>
-        <span className="font-hand text-sm text-mahogany">{month} {year}</span>
+        <h3 className="font-chunky text-xl text-midnight">SCHEDULE</h3>
+        <span className="font-hand text-sm text-coral">{month} {year}</span>
       </div>
       <div className="mt-3 grid grid-cols-7 gap-1 text-center">
         {["S","M","T","W","T","F","S"].map((d, i) => (
-          <span key={i} className="font-hand text-[10px] uppercase tracking-wide text-muted-foreground">{d}</span>
+          <span key={i} className="font-bold text-[10px] uppercase tracking-wide text-midnight/50">{d}</span>
         ))}
-        {Array.from({ length: days.startPad }).map((_, i) => (
-          <span key={`pad-${i}`} />
-        ))}
+        {Array.from({ length: days.startPad }).map((_, i) => <span key={`pad-${i}`} />)}
         {Array.from({ length: days.total }).map((_, i) => {
           const day = i + 1;
           const isToday = day === days.today;
@@ -209,12 +202,12 @@ function ReadingSchedule() {
           return (
             <span
               key={day}
-              className={`grid h-7 place-items-center rounded-full font-serif text-xs ${
+              className={`grid h-7 place-items-center rounded-full text-xs font-bold ${
                 isToday
-                  ? "bg-mahogany text-aged shadow"
+                  ? "bg-coral text-white pop-shadow"
                   : hasSession
-                  ? "bg-gold/30 text-walnut"
-                  : "text-foreground/60 hover:bg-parchment"
+                  ? "bg-butter text-midnight"
+                  : "text-midnight/55 hover:bg-periwinkle/30"
               }`}
             >
               {day}
@@ -222,46 +215,35 @@ function ReadingSchedule() {
           );
         })}
       </div>
-      <div className="mt-3 flex items-center gap-3 border-t border-border pt-3 font-hand text-xs">
-        <span className="flex items-center gap-1.5 text-walnut">
-          <span className="h-2 w-2 rounded-full bg-mahogany" /> today
-        </span>
-        <span className="flex items-center gap-1.5 text-walnut">
-          <span className="h-2 w-2 rounded-full bg-gold/60" /> read
-        </span>
-      </div>
     </div>
   );
 }
 
 function FriendsFeed() {
   const items = [
-    { name: "Eliza", color: "#7d4f3c", icon: Highlighter, action: "highlighted in", book: "The Bell Jar", note: "“I felt like a horse in a circus.”" },
-    { name: "Marcus", color: "#3d5a4a", icon: BookOpen, action: "is reading", book: "Pachinko", note: "halfway through, ch. 14" },
-    { name: "Junia", color: "#8a4a5e", icon: MessageCircle, action: "reviewed", book: "Stoner", note: "“Quiet, devastating, perfect.”" },
+    { name: "Eliza", color: "#E8433A", icon: Highlighter, action: "highlighted in", book: "The Bell Jar", note: "\u201cI felt like a horse in a circus.\u201d" },
+    { name: "Marcus", color: "#7A9E7E", icon: BookOpen, action: "is reading", book: "Pachinko", note: "halfway through, ch. 14" },
+    { name: "Junia", color: "#8FB6E3", icon: MessageCircle, action: "reviewed", book: "Stoner", note: "\u201cQuiet, devastating, perfect.\u201d" },
   ];
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div className="rounded-3xl bg-white p-5 pop-shadow">
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-lg text-walnut">Reader friends</h3>
-        <span className="font-hand text-xs text-muted-foreground">today</span>
+        <h3 className="font-chunky text-xl text-midnight">FRIEND FEED</h3>
+        <span className="font-hand text-xs text-coral">today</span>
       </div>
-      <ul className="mt-3 space-y-4">
+      <ul className="mt-3 space-y-3">
         {items.map((f) => (
           <li key={f.name} className="flex gap-3">
-            <div
-              className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full font-display text-aged text-sm shadow-inner"
-              style={{ backgroundColor: f.color }}
-            >
+            <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full font-chunky text-white text-sm pop-shadow" style={{ backgroundColor: f.color }}>
               {f.name[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-serif text-sm text-walnut">
-                <span className="font-medium">{f.name}</span>
-                <span className="text-muted-foreground"> {f.action} </span>
+              <p className="text-sm text-midnight">
+                <span className="font-bold">{f.name}</span>
+                <span className="text-midnight/60"> {f.action} </span>
                 <span className="italic">{f.book}</span>
               </p>
-              <p className="mt-0.5 flex items-start gap-1 font-hand text-xs text-mahogany">
+              <p className="mt-0.5 flex items-start gap-1 font-hand text-xs text-coral">
                 <f.icon className="h-3 w-3 flex-shrink-0 translate-y-0.5" />
                 <span className="line-clamp-2">{f.note}</span>
               </p>
@@ -275,38 +257,42 @@ function FriendsFeed() {
 
 function CurrentlyReading({ b }: { b: UserBook }) {
   const total = b.total_pages ?? 300;
-  const pct = Math.min(100, Math.round((b.current_page / total) * 100));
+  const pct = Math.min(100, Math.round(((b.current_page ?? 0) / total) * 100));
   return (
-    <div className="mt-8 grid gap-6 rounded-3xl border border-border bg-card p-6 shadow-lg shadow-walnut/5 md:grid-cols-[auto,1fr]">
+    <div className="grid gap-6 rounded-3xl bg-white p-6 pop-shadow md:grid-cols-[auto,1fr] md:p-7">
       <div
-        className="book-spine mx-auto h-48 w-32 flex-shrink-0 rounded-md md:h-60 md:w-40"
+        className="mx-auto h-48 w-32 flex-shrink-0 overflow-hidden rounded-md border-2 border-midnight/10 md:h-60 md:w-40"
         style={{ backgroundColor: b.spine_color ?? "#5C3D2E" }}
       >
         {b.book.cover_url ? (
-          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded-md object-cover" />
+          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full flex-col justify-between p-3 text-aged">
-            <span className="font-display text-sm leading-tight">{b.book.title}</span>
-            <span className="font-serif text-xs opacity-80">{b.book.author}</span>
+          <div className="flex h-full flex-col justify-between p-3 text-white">
+            <span className="font-chunky text-sm leading-tight">{b.book.title}</span>
+            <span className="text-xs opacity-80">{b.book.author}</span>
           </div>
         )}
       </div>
       <div className="flex flex-col justify-center">
-        <span className="font-hand text-sm text-mahogany">currently reading</span>
-        <Link to="/books/$bookId" params={{ bookId: b.book.id }} className="mt-1 block font-display text-3xl text-ink hover:text-mahogany">{b.book.title}</Link>
-        <p className="mt-1 font-serif text-sm text-muted-foreground">by {b.book.author ?? "Unknown"}</p>
-        {b.book.description && (
-          <p className="mt-3 line-clamp-3 font-serif text-sm leading-relaxed text-foreground/80">{b.book.description}</p>
-        )}
+        <span className="font-hand text-sm text-coral">currently reading</span>
+        <Link to="/books/$bookId" params={{ bookId: b.book.id }} className="mt-1 block font-chunky text-3xl text-midnight hover:text-coral">{b.book.title}</Link>
+        <p className="mt-1 text-sm italic text-midnight/60">by {b.book.author ?? "Unknown"}</p>
+        {b.book.description && <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-midnight/80">{b.book.description}</p>}
         <div className="mt-5">
           <div className="flex items-baseline justify-between font-hand text-sm">
-            <span className="text-mahogany">{b.current_page} / {total} pages</span>
-            <span className="text-muted-foreground">{pct}%</span>
+            <span className="text-coral">{b.current_page ?? 0} / {total} pages</span>
+            <span className="text-midnight/60">{pct}%</span>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-parchment">
-            <div className="h-full rounded-full bg-mahogany transition-all" style={{ width: `${pct}%` }} />
+          <div className="mt-2 h-3 overflow-hidden rounded-full bg-periwinkle/30">
+            <div className="h-full rounded-full bg-coral transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
+        <Link
+          to="/read/$bookId" params={{ bookId: b.id }}
+          className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-coral px-5 py-2 text-sm font-bold uppercase tracking-wider text-white pop-shadow hover:bg-coral-deep"
+        >
+          Open reader →
+        </Link>
       </div>
     </div>
   );
@@ -314,13 +300,11 @@ function CurrentlyReading({ b }: { b: UserBook }) {
 
 function EmptyCurrent() {
   return (
-    <div className="mt-8 rounded-3xl border border-dashed border-walnut/30 bg-aged p-10 text-center">
-      <p className="font-display text-2xl text-walnut">Nothing on the nightstand</p>
-      <p className="mt-2 font-serif text-sm text-muted-foreground">
-        Add a book to your shelf and mark it as currently reading.
-      </p>
-      <Link to="/shelf" className="mt-5 inline-flex rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut">
-        Open my shelf
+    <div className="rounded-3xl border-2 border-dashed border-white/60 bg-white/40 p-10 text-center">
+      <p className="font-chunky text-2xl text-midnight">NOTHING ON THE NIGHTSTAND</p>
+      <p className="mt-2 text-sm text-midnight/70">Add a book to your shelf and mark it as currently reading.</p>
+      <Link to="/shelf" className="mt-5 inline-flex rounded-full bg-coral px-5 py-2 font-bold text-white pop-shadow hover:bg-coral-deep">
+        Open my shelf →
       </Link>
     </div>
   );
@@ -334,20 +318,20 @@ function BookCover({ b }: { b: UserBook }) {
       className="group flex w-32 flex-shrink-0 flex-col"
     >
       <div
-        className="book-spine flex h-44 w-32 flex-col justify-between rounded-md p-3 transition group-hover:-translate-y-1"
+        className="flex h-44 w-32 flex-col justify-between overflow-hidden rounded-md border-2 border-midnight/10 p-3 pop-shadow transition group-hover:-translate-y-1"
         style={{ backgroundColor: b.spine_color ?? "#5C3D2E", color: "#FAF7F2" }}
       >
         {b.book.cover_url ? (
-          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full rounded object-cover" loading="lazy" />
+          <img src={b.book.cover_url} alt={b.book.title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
           <>
-            <span className="font-display text-sm leading-tight">{b.book.title}</span>
-            <span className="font-serif text-[10px] opacity-80">{b.book.author}</span>
+            <span className="font-chunky text-sm leading-tight">{b.book.title}</span>
+            <span className="text-[10px] opacity-80">{b.book.author}</span>
           </>
         )}
       </div>
-      <p className="mt-2 line-clamp-1 font-serif text-sm text-walnut">{b.book.title}</p>
-      <p className="font-serif text-xs italic text-muted-foreground">{b.book.author}</p>
+      <p className="mt-2 line-clamp-1 text-sm font-bold text-midnight">{b.book.title}</p>
+      <p className="text-xs italic text-midnight/60">{b.book.author}</p>
     </Link>
   );
 }
@@ -358,15 +342,15 @@ function ProgressRing({ read, goal }: { read: number; goal: number }) {
   return (
     <div className="mt-3 flex items-center gap-4">
       <svg width="96" height="96" viewBox="0 0 96 96">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--color-parchment)" strokeWidth="8" />
-        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--color-mahogany)" strokeWidth="8"
+        <circle cx="48" cy="48" r={r} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="10" />
+        <circle cx="48" cy="48" r={r} fill="none" stroke="#E8433A" strokeWidth="10"
           strokeDasharray={c} strokeDashoffset={c - (c * pct) / 100} strokeLinecap="round"
           transform="rotate(-90 48 48)" />
-        <text x="48" y="54" textAnchor="middle" className="font-display" style={{ fontFamily: "Henny Penny", fill: "var(--color-walnut)", fontSize: 22 }}>{read}</text>
+        <text x="48" y="55" textAnchor="middle" style={{ fontFamily: "Bagel Fat One", fill: "#1a1a2e", fontSize: 22 }}>{read}</text>
       </svg>
-      <div className="font-serif text-sm text-muted-foreground">
+      <div className="text-sm text-midnight/75">
         <p>{read} of {goal} books read this year</p>
-        <p className="mt-1 font-hand text-mahogany">{pct}% of your goal</p>
+        <p className="mt-1 font-hand text-coral">{pct}% of your goal</p>
       </div>
     </div>
   );
