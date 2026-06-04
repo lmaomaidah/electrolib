@@ -64,8 +64,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "ElectroLibrary" },
       { name: "twitter:description", content: "A warm, literary reading tracker. Curate your library, follow your progress, and turn every book into a kept story." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/037046dd-fe1e-49a0-bb21-4d160552ac4b" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/037046dd-fe1e-49a0-bb21-4d160552ac4b" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zbpLZMSGWFfpdooxx6SdLqVUL473/social-images/social-1780578100581-Screenshot_2026-06-04_180106.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/zbpLZMSGWFfpdooxx6SdLqVUL473/social-images/social-1780578100581-Screenshot_2026-06-04_180106.webp" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
