@@ -17,9 +17,17 @@ function AuthenticatedLayout() {
   const router = useRouter();
   const { theme, toggle } = useTheme();
   const [email, setEmail] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
+    supabase.auth.getUser().then(async ({ data }) => {
+      setEmail(data.user?.email ?? "");
+      if (data.user) {
+        const { data: r } = await supabase
+          .from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
+        setIsAdmin(!!r);
+      }
+    });
   }, []);
 
   async function signOut() {
@@ -39,7 +47,10 @@ function AuthenticatedLayout() {
             <NavIcon to="/shelf" icon={Library} label="Shelf" />
             <NavIcon to="/discover" icon={Compass} label="Discover" />
             <NavIcon to="/friends" icon={Users} label="Friends" />
+            <NavIcon to="/clubs" icon={Users} label="Clubs" />
+            <NavIcon to="/feedback" icon={MessageSquare} label="Feedback" />
             <NavIcon to="/settings" icon={Settings} label="Settings" />
+            {isAdmin && <NavIcon to="/admin" icon={Shield} label="Admin" />}
           </nav>
         </div>
         <div className="flex flex-col items-center gap-2">
@@ -68,8 +79,10 @@ function AuthenticatedLayout() {
         <NavIcon to="/dashboard" icon={Home} label="Home" />
         <NavIcon to="/shelf" icon={Library} label="Shelf" />
         <NavIcon to="/discover" icon={Compass} label="Discover" />
-        <NavIcon to="/friends" icon={Users} label="Friends" />
+        <NavIcon to="/clubs" icon={Users} label="Clubs" />
+        <NavIcon to="/feedback" icon={MessageSquare} label="Feedback" />
         <NavIcon to="/settings" icon={Settings} label="Settings" />
+        {isAdmin && <NavIcon to="/admin" icon={Shield} label="Admin" />}
         <button onClick={toggle} className="rounded-full p-2 text-white/80">
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
@@ -81,7 +94,7 @@ function AuthenticatedLayout() {
 function NavIcon({
   to, icon: Icon, label,
 }: {
-  to: "/dashboard" | "/shelf" | "/discover" | "/friends" | "/settings";
+  to: "/dashboard" | "/shelf" | "/discover" | "/friends" | "/clubs" | "/feedback" | "/settings" | "/admin";
   icon: typeof Home; label: string;
 }) {
   return (
