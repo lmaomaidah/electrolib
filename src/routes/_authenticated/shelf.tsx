@@ -82,25 +82,26 @@ function ShelfPage() {
   });
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen bg-periwinkle pb-24 font-rounded">
       {/* Header bar over the library */}
-      <div className="sticky top-0 z-10 border-b border-walnut/20 bg-gradient-to-b from-aged to-cream/80 px-6 py-5 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-walnut md:text-4xl">The Shelf</h1>
-            <p className="font-hand text-sm text-mahogany">your library, candlelit</p>
+      <div className="sticky top-0 z-10 border-b-2 border-midnight/10 bg-periwinkle/95 px-6 py-5 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+          <div className="rounded-2xl bg-coral px-5 py-3 pop-shadow tilt-l-sm">
+            <h1 className="font-chunky text-2xl text-stroke-white text-shadow-pop md:text-3xl">THE SHELF!</h1>
+            <p className="font-hand text-xs text-white/90">your library, your way</p>
           </div>
           <div className="flex items-center gap-2">
             <CsvImport userId={userId} />
             <button
               onClick={() => setShowAdd(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-mahogany px-4 py-2 font-serif text-sm text-aged transition hover:bg-walnut"
+              className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-coral-deep"
             >
               <Plus className="h-4 w-4" /> Add a book
             </button>
           </div>
         </div>
       </div>
+
 
       {/* Library room */}
       <div className="shelf-backboard mx-auto mt-6 max-w-7xl px-3 pb-10 md:px-8">
