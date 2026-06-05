@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, redirect, Link, useRouter } from "@tanstack/re
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
-import { Home, Library, Compass, Users, Settings, LogOut, BookMarked, Sun, Moon } from "lucide-react";
+import { Home, Library, Compass, Users, Settings, LogOut, BookMarked, Sun, Moon, MessageSquare, Shield } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
