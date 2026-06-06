@@ -42,15 +42,15 @@ function Landing() {
             </Link>
             <ul className="hidden items-center gap-1 md:flex">
               {NAV.map((n, i) => (
-                <li key={n}>
-                  <a
-                    href="#"
+                <li key={n.label}>
+                  <Link
+                    to={n.to}
                     className={`flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-semibold text-white/95 transition hover:bg-white/15 ${
                       i === 0 ? "bg-white/20" : ""
                     }`}
                   >
-                    {n} {i === NAV.length - 1 && <ChevronDown className="h-3.5 w-3.5" />}
-                  </a>
+                    {n.label}
+                  </Link>
                 </li>
               ))}
             </ul>
