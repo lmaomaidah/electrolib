@@ -275,6 +275,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_or_create_book: {
+        Args: {
+          _author: string
+          _cover_url: string
+          _genre: string
+          _isbn: string
+          _title: string
+        }
+        Returns: string
+      }
+      get_shared_epub_path: { Args: { _book_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
