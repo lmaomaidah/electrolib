@@ -128,7 +128,7 @@ function FriendsPage() {
           {/* Activity */}
           <section className="rounded-3xl bg-butter p-6 pop-shadow tilt-r-sm">
             <h2 className="font-chunky text-2xl text-midnight">FRIEND ACTIVITY</h2>
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 max-h-[28rem] space-y-3 overflow-y-auto pr-2">
               {activity.length === 0 && (
                 <p className="font-hand text-midnight/70">Follow someone to see what they're reading.</p>
               )}
