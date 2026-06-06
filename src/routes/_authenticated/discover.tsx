@@ -53,18 +53,23 @@ function DiscoverPage() {
       if (!uid) throw new Error("Not signed in");
 
       const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null;
-      const { data: book, error: bErr } = await supabase.from("books").insert({
-        title: doc.title,
-        author: doc.author_name?.[0] ?? null,
-        cover_url: cover,
-        isbn: doc.isbn?.[0] ?? null,
-        genre: doc.subject?.[0] ?? null,
-      }).select("id").single();
+      // Dedupe books across users via shared canonical row
+      const { data: bookId, error: bErr } = await supabase.rpc("find_or_create_book", {
+        _title: doc.title,
+        _author: doc.author_name?.[0] ?? null,
+        _cover_url: cover,
+        _isbn: doc.isbn?.[0] ?? null,
+        _genre: doc.subject?.[0] ?? null,
+      });
       if (bErr) throw bErr;
 
       const color = SPINE_COLORS[Math.floor(Math.random() * SPINE_COLORS.length)];
+      // Inherit any shared epub path uploaded by another reader
+      const { data: shared } = await supabase.rpc("get_shared_epub_path", { _book_id: bookId });
+
       const { error: ubErr } = await supabase.from("user_books").insert({
-        user_id: uid, book_id: book.id, shelf: "want-to-read", spine_color: color,
+        user_id: uid, book_id: bookId, shelf: "want-to-read",
+        spine_color: color, epub_path: shared ?? null,
       });
       if (ubErr) throw ubErr;
     },
