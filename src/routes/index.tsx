@@ -138,15 +138,8 @@ function Landing() {
         <div className="relative z-10 mx-auto mt-16 max-w-5xl px-6">
           <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-periwinkle-deep to-periwinkle pop-shadow">
             <LibraryScene />
-            <div className="absolute -bottom-4 right-4 w-72 max-w-[80%] rounded-2xl bg-white p-5 pop-shadow tilt-r-sm md:right-8">
-              <div className="font-chunky text-coral text-lg">CONTACT</div>
-              <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Name</label>
-              <input className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Enter your name…" />
-              <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Email</label>
-              <input className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="you@library.com" />
-              <button className="mt-3 w-full rounded-full bg-coral py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-coral-deep">
-                Send →
-              </button>
+            <div className="absolute -bottom-4 right-4 w-80 max-w-[85%] rounded-2xl bg-white p-5 pop-shadow tilt-r-sm md:right-8">
+              <EpubRequestForm />
             </div>
           </div>
           <p className="ml-4 mt-8 font-bold uppercase tracking-wider text-white/80 text-xs">
