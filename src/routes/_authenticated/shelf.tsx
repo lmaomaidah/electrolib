@@ -92,6 +92,23 @@ function ShelfPage() {
           </div>
           <div className="flex items-center gap-2">
             <CsvImport userId={userId} />
+            {rows.length > 0 && (
+              <button
+                onClick={async () => {
+                  if (!userId) return;
+                  if (!confirm(`Delete all ${rows.length} books from your shelf? This cannot be undone.`)) return;
+                  const { error } = await supabase.from("user_books").delete().eq("user_id", userId);
+                  if (error) return toast.error(error.message);
+                  toast.success("Shelf cleared");
+                  qc.invalidateQueries({ queryKey: ["shelf"] });
+                  qc.invalidateQueries({ queryKey: ["dashboard-books"] });
+                }}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-midnight/15 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wider text-midnight/70 hover:bg-coral hover:text-white hover:border-coral"
+                title="Delete entire shelf"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Clear all
+              </button>
+            )}
             <button
               onClick={() => setShowAdd(true)}
               className="inline-flex items-center gap-2 rounded-full bg-coral px-4 py-2 text-sm font-bold uppercase tracking-wider text-white hover:bg-coral-deep"
