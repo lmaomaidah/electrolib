@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   BookOpen, BookMarked, Calendar, Users, Search, ChevronLeft, ChevronRight,
   Github, Linkedin, ArrowRight, Star, ChevronDown, Library,
@@ -14,7 +17,13 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const NAV = ["Home", "Catalogue", "Events", "Reading Lists", "Membership"];
+const NAV: { label: string; to: string }[] = [
+  { label: "Home", to: "/" },
+  { label: "Discover", to: "/discover" },
+  { label: "Shelf", to: "/shelf" },
+  { label: "Clubs", to: "/clubs" },
+  { label: "Friends", to: "/friends" },
+];
 
 function Landing() {
   return (
@@ -33,15 +42,15 @@ function Landing() {
             </Link>
             <ul className="hidden items-center gap-1 md:flex">
               {NAV.map((n, i) => (
-                <li key={n}>
-                  <a
-                    href="#"
+                <li key={n.label}>
+                  <Link
+                    to={n.to}
                     className={`flex items-center gap-1 rounded-full px-4 py-1.5 text-sm font-semibold text-white/95 transition hover:bg-white/15 ${
                       i === 0 ? "bg-white/20" : ""
                     }`}
                   >
-                    {n} {i === NAV.length - 1 && <ChevronDown className="h-3.5 w-3.5" />}
-                  </a>
+                    {n.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -129,15 +138,8 @@ function Landing() {
         <div className="relative z-10 mx-auto mt-16 max-w-5xl px-6">
           <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-periwinkle-deep to-periwinkle pop-shadow">
             <LibraryScene />
-            <div className="absolute -bottom-4 right-4 w-72 max-w-[80%] rounded-2xl bg-white p-5 pop-shadow tilt-r-sm md:right-8">
-              <div className="font-chunky text-coral text-lg">CONTACT</div>
-              <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Name</label>
-              <input className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Enter your name…" />
-              <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Email</label>
-              <input className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="you@library.com" />
-              <button className="mt-3 w-full rounded-full bg-coral py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-coral-deep">
-                Send →
-              </button>
+            <div className="absolute -bottom-4 right-4 w-80 max-w-[85%] rounded-2xl bg-white p-5 pop-shadow tilt-r-sm md:right-8">
+              <EpubRequestForm />
             </div>
           </div>
           <p className="ml-4 mt-8 font-bold uppercase tracking-wider text-white/80 text-xs">
@@ -254,6 +256,61 @@ function Landing() {
 }
 
 /* ───────── Bits & illustrations ───────── */
+
+function EpubRequestForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [title, setTitle] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return toast.error("Tell us which book you'd like");
+    setSending(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        toast.error("Please sign in first to send a request");
+        setSending(false);
+        return;
+      }
+      const msg = `EPUB REQUEST\nName: ${name || "—"}\nEmail: ${email || u.user.email || "—"}\nBook: ${title}`;
+      const { error } = await supabase.from("feedback").insert({
+        user_id: u.user.id, message: msg.slice(0, 1000), rating: null,
+      });
+      if (error) throw error;
+      toast.success("Request sent to the librarians!");
+      setName(""); setEmail(""); setTitle("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send");
+    } finally { setSending(false); }
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <div className="font-chunky text-coral text-lg">REQUEST AN EPUB</div>
+      <p className="mt-1 text-[10px] text-midnight/60">
+        Ask the librarians to add a book to the catalogue.
+      </p>
+      <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Your name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Email</label>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" maxLength={120}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional reply-to" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Book you want</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Title — Author" />
+      <button disabled={sending} className="mt-3 w-full rounded-full bg-coral py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-coral-deep disabled:opacity-60">
+        {sending ? "Sending…" : "Send request →"}
+      </button>
+      <p className="mt-2 text-[10px] italic text-midnight/50">
+        Sign in to send. We reply through the Feedback inbox.
+      </p>
+    </form>
+  );
+}
+
 
 function Clouds() {
   return (
