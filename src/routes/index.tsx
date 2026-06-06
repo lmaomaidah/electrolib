@@ -257,6 +257,61 @@ function Landing() {
 
 /* ───────── Bits & illustrations ───────── */
 
+function EpubRequestForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [title, setTitle] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return toast.error("Tell us which book you'd like");
+    setSending(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        toast.error("Please sign in first to send a request");
+        setSending(false);
+        return;
+      }
+      const msg = `EPUB REQUEST\nName: ${name || "—"}\nEmail: ${email || u.user.email || "—"}\nBook: ${title}`;
+      const { error } = await supabase.from("feedback").insert({
+        user_id: u.user.id, message: msg.slice(0, 1000), rating: null,
+      });
+      if (error) throw error;
+      toast.success("Request sent to the librarians!");
+      setName(""); setEmail(""); setTitle("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send");
+    } finally { setSending(false); }
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <div className="font-chunky text-coral text-lg">REQUEST AN EPUB</div>
+      <p className="mt-1 text-[10px] text-midnight/60">
+        Ask the librarians to add a book to the catalogue.
+      </p>
+      <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Your name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Email</label>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" maxLength={120}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional reply-to" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Book you want</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Title — Author" />
+      <button disabled={sending} className="mt-3 w-full rounded-full bg-coral py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-coral-deep disabled:opacity-60">
+        {sending ? "Sending…" : "Send request →"}
+      </button>
+      <p className="mt-2 text-[10px] italic text-midnight/50">
+        Sign in to send. We reply through the Feedback inbox.
+      </p>
+    </form>
+  );
+}
+
+
 function Clouds() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
