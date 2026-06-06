@@ -52,14 +52,14 @@ function DiscoverPage() {
       const uid = userData.user?.id;
       if (!uid) throw new Error("Not signed in");
 
-      const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null;
+      const cover = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : "";
       // Dedupe books across users via shared canonical row
       const { data: bookId, error: bErr } = await supabase.rpc("find_or_create_book", {
         _title: doc.title,
-        _author: doc.author_name?.[0] ?? null,
+        _author: doc.author_name?.[0] ?? "",
         _cover_url: cover,
-        _isbn: doc.isbn?.[0] ?? null,
-        _genre: doc.subject?.[0] ?? null,
+        _isbn: doc.isbn?.[0] ?? "",
+        _genre: doc.subject?.[0] ?? "",
       });
       if (bErr) throw bErr;
 
