@@ -98,7 +98,7 @@ function FriendsPage() {
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name…"
                 className="flex-1 bg-transparent font-rounded text-sm outline-none" />
             </div>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 max-h-[28rem] space-y-2 overflow-y-auto pr-2">
               {people.map((p) => {
                 const isFollowing = follows.includes(p.id);
                 return (
