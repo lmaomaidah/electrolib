@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   BookOpen, BookMarked, Calendar, Users, Search, ChevronLeft, ChevronRight,
   Github, Linkedin, ArrowRight, Star, ChevronDown, Library,
@@ -14,7 +17,13 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const NAV = ["Home", "Catalogue", "Events", "Reading Lists", "Membership"];
+const NAV: { label: string; to: string }[] = [
+  { label: "Home", to: "/" },
+  { label: "Discover", to: "/discover" },
+  { label: "Shelf", to: "/shelf" },
+  { label: "Clubs", to: "/clubs" },
+  { label: "Friends", to: "/friends" },
+];
 
 function Landing() {
   return (
