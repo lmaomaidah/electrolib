@@ -108,7 +108,7 @@ function ReaderPage() {
         if (pct != null) setProgress(Math.round(pct * 100));
         if (cfi) {
           let pageNum: number | null = null;
-          try { pageNum = book.locations.locationFromCfi(cfi) as number; } catch { /* ignore */ }
+          try { pageNum = book.locations.locationFromCfi(cfi) as unknown as number; } catch { /* ignore */ }
           await supabase.from("user_books").update({
             reader_cfi: cfi,
             reader_percent: pct,
