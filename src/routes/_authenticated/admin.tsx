@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, BookOpen, MessageSquare, CheckCircle2, Star, Trash2 } from "lucide-react";
+import { Shield, Users, BookOpen, MessageSquare, CheckCircle2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import {
@@ -120,19 +120,8 @@ function AdminPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  const removeBook = useMutation({
-    mutationFn: async (_id: string) => {
-      // books table has no delete RLS — best-effort. Remove user_books references instead would need admin.
-      const { error } = await supabase.from("user_books").delete().eq("book_id", _id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Cleared all shelf references for that book");
-      qc.invalidateQueries({ queryKey: ["admin-shelves"] });
-      qc.invalidateQueries({ queryKey: ["admin-stats"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
+
+
 
   return (
     <div className="min-h-screen bg-periwinkle font-rounded pb-24">
