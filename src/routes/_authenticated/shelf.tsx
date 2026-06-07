@@ -326,45 +326,55 @@ function BookModal({ row, onClose, onChange }: { row: Row; onClose: () => void; 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 backdrop-blur-sm md:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-midnight/70 backdrop-blur-sm md:items-center" onClick={onClose}>
       <div
-        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-card p-6 shadow-2xl md:rounded-3xl md:p-8"
+        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-periwinkle p-6 pop-shadow md:rounded-3xl md:p-8 font-rounded"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: "slide-up 400ms cubic-bezier(.2,.8,.2,1)" }}
       >
         <div className="flex items-start justify-between">
-          <span className="font-hand text-sm text-mahogany capitalize">{row.shelf.replace("-", " ")}</span>
-          <button onClick={onClose} className="rounded-full p-1.5 text-walnut/60 hover:bg-parchment">
+          <span className="inline-flex items-center rounded-full bg-coral px-3 py-1 font-hand text-xs uppercase tracking-widest text-white pop-shadow">
+            {row.shelf.replace("-", " ")}
+          </span>
+          <button onClick={onClose} className="rounded-full bg-white/70 p-1.5 text-midnight hover:bg-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="mt-4 grid gap-6 md:grid-cols-[auto,1fr]">
-          <div className="book-spine mx-auto h-56 w-40 rounded-md md:h-72 md:w-48" style={{ backgroundColor: row.spine_color ?? "#5C3D2E" }}>
+          <div className="mx-auto h-72 w-48 overflow-hidden rounded-xl border-2 border-midnight/10 bg-white pop-shadow tilt-l-sm">
             {row.book.cover_url ? (
-              <img src={row.book.cover_url} alt={row.book.title} className="h-full w-full rounded-md object-cover" />
+              <img src={row.book.cover_url} alt={row.book.title} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full flex-col justify-between p-4 text-aged">
-                <span className="font-display text-lg leading-tight">{row.book.title}</span>
-                <span className="font-serif text-xs opacity-80">{row.book.author}</span>
+              <div className="flex h-full flex-col justify-between p-4 text-white" style={{ backgroundColor: row.spine_color ?? "#5C3D2E" }}>
+                <span className="font-chunky text-lg leading-tight text-stroke-white text-shadow-pop">{row.book.title}</span>
+                <span className="text-xs italic opacity-90">{row.book.author}</span>
               </div>
             )}
           </div>
 
-          <div>
-            <h2 className="font-display text-3xl text-ink">{row.book.title}</h2>
-            <p className="mt-1 font-serif italic text-muted-foreground">by {row.book.author ?? "Unknown"}</p>
-            {row.book.genre && <span className="mt-2 inline-block rounded-full bg-parchment px-3 py-0.5 font-hand text-xs text-walnut">{row.book.genre}</span>}
-            {row.book.avg_rating && (
-              <p className="mt-2 font-serif text-sm text-muted-foreground">Goodreads avg ★ {Number(row.book.avg_rating).toFixed(2)}</p>
-            )}
+          <div className="rounded-2xl bg-white p-5 pop-shadow tilt-r-sm">
+            <h2 className="font-chunky text-3xl text-midnight">{row.book.title}</h2>
+            <p className="mt-1 italic text-midnight/60">by {row.book.author ?? "Unknown"}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {row.book.genre && (
+                <span className="inline-block rounded-full bg-butter px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-midnight">
+                  {row.book.genre}
+                </span>
+              )}
+              {row.book.avg_rating && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-coral/15 px-3 py-0.5 text-xs font-bold text-coral">
+                  <Star className="h-3 w-3 fill-coral text-coral" /> {Number(row.book.avg_rating).toFixed(2)} avg
+                </span>
+              )}
+            </div>
             {row.book.description && (
-              <p className="mt-3 max-h-32 overflow-y-auto font-serif text-sm leading-relaxed text-foreground/85">{row.book.description}</p>
+              <p className="mt-3 max-h-32 overflow-y-auto text-sm leading-relaxed text-midnight/85">{row.book.description}</p>
             )}
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 grid gap-4 rounded-2xl bg-white p-5 pop-shadow md:grid-cols-2">
           <Block label="Shelf">
             <select value={shelf} onChange={(e) => setShelf(e.target.value as Shelf)} className="modal-input">
               <option value="want-to-read">Want to read</option>
@@ -376,7 +386,7 @@ function BookModal({ row, onClose, onChange }: { row: Row; onClose: () => void; 
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button key={n} type="button" onClick={() => setRating(n === rating ? 0 : n)}>
-                  <Star className={`h-6 w-6 ${n <= rating ? "fill-gold text-gold" : "text-walnut/30"}`} />
+                  <Star className={`h-6 w-6 ${n <= rating ? "fill-coral text-coral" : "text-midnight/25"}`} />
                 </button>
               ))}
             </div>
@@ -387,40 +397,42 @@ function BookModal({ row, onClose, onChange }: { row: Row; onClose: () => void; 
           <Block label="Total pages">
             <input type="number" min={0} value={total} onChange={(e) => setTotal(Number(e.target.value))} className="modal-input" />
           </Block>
+          <div className="md:col-span-2">
+            <Block label="Your review">
+              <textarea
+                value={review} onChange={(e) => setReview(e.target.value)} rows={4} maxLength={2000}
+                placeholder="What stayed with you?" className="modal-input resize-none"
+              />
+            </Block>
+          </div>
         </div>
 
-        <Block label="Your review">
-          <textarea
-            value={review} onChange={(e) => setReview(e.target.value)} rows={4} maxLength={2000}
-            placeholder="What stayed with you?" className="modal-input resize-none"
-          />
-        </Block>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <button onClick={remove} className="inline-flex items-center gap-1 font-serif text-sm text-destructive hover:underline">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <button onClick={remove} className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-bold text-coral hover:bg-coral hover:text-white">
             <X className="h-3.5 w-3.5" /> Remove from shelf
           </button>
           <div className="flex flex-wrap gap-2">
             <QuickReadingToggle row={row} onDone={onChange} />
             <Link
               to="/read/$bookId" params={{ bookId: row.id }}
-              className="inline-flex items-center gap-1 rounded-full bg-gold px-5 py-2 font-serif text-sm text-ink hover:opacity-90"
+              className="inline-flex items-center gap-1 rounded-full bg-midnight px-5 py-2 text-sm font-bold uppercase tracking-wider text-white pop-shadow hover:opacity-90"
             >
               {row.reader_cfi ? (<><Play className="h-4 w-4" /> Resume</>) : (<><BookOpen className="h-4 w-4" /> Open reader</>)}
             </Link>
-            <button onClick={onClose} className="rounded-full border border-border px-5 py-2 font-serif text-sm text-walnut hover:bg-parchment">Cancel</button>
-            <button onClick={save} className="rounded-full bg-mahogany px-5 py-2 font-serif text-sm text-aged hover:bg-walnut">Save</button>
+            <button onClick={onClose} className="rounded-full bg-white px-5 py-2 text-sm font-bold text-midnight hover:bg-butter">Cancel</button>
+            <button onClick={save} className="rounded-full bg-coral px-5 py-2 text-sm font-bold uppercase tracking-wider text-white pop-shadow hover:bg-coral-deep">Save</button>
           </div>
         </div>
 
         <style>{`
           @keyframes slide-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
           .modal-input {
-            width: 100%; background: var(--color-aged); border: 1px solid var(--color-border);
-            border-radius: 0.5rem; padding: 0.6rem 0.85rem; font-family: var(--font-serif);
-            color: var(--color-foreground); outline: none; transition: border-color 200ms;
+            width: 100%; background: #fff;
+            border: 2px solid rgba(26,26,58,0.12);
+            border-radius: 0.75rem; padding: 0.6rem 0.85rem;
+            color: #1a1a3a; outline: none; transition: border-color 200ms;
           }
-          .modal-input:focus { border-color: var(--color-gold); }
+          .modal-input:focus { border-color: #ff6b6b; }
         `}</style>
       </div>
     </div>
