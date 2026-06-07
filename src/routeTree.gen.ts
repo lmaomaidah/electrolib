@@ -21,6 +21,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedClubsRouteImport } from './routes/_authenticated/clubs'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedReadBookIdRouteImport } from './routes/_authenticated/read.$bookId'
+import { Route as AuthenticatedProfilesUserIdRouteImport } from './routes/_authenticated/profiles.$userId'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -82,6 +83,12 @@ const AuthenticatedReadBookIdRoute = AuthenticatedReadBookIdRouteImport.update({
   path: '/read/$bookId',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProfilesUserIdRoute =
+  AuthenticatedProfilesUserIdRouteImport.update({
+    id: '/profiles/$userId',
+    path: '/profiles/$userId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/shelf': typeof AuthenticatedShelfRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
 export interface FileRoutesByTo {
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/shelf': typeof AuthenticatedShelfRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
 export interface FileRoutesById {
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/shelf': typeof AuthenticatedShelfRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/_authenticated/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/_authenticated/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
 export interface FileRouteTypes {
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shelf'
     | '/books/$bookId'
+    | '/profiles/$userId'
     | '/read/$bookId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shelf'
     | '/books/$bookId'
+    | '/profiles/$userId'
     | '/read/$bookId'
   id:
     | '__root__'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/shelf'
     | '/_authenticated/books/$bookId'
+    | '/_authenticated/profiles/$userId'
     | '/_authenticated/read/$bookId'
   fileRoutesById: FileRoutesById
 }
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReadBookIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profiles/$userId': {
+      id: '/_authenticated/profiles/$userId'
+      path: '/profiles/$userId'
+      fullPath: '/profiles/$userId'
+      preLoaderRoute: typeof AuthenticatedProfilesUserIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
@@ -291,6 +311,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedShelfRoute: typeof AuthenticatedShelfRoute
   AuthenticatedBooksBookIdRoute: typeof AuthenticatedBooksBookIdRoute
+  AuthenticatedProfilesUserIdRoute: typeof AuthenticatedProfilesUserIdRoute
   AuthenticatedReadBookIdRoute: typeof AuthenticatedReadBookIdRoute
 }
 
@@ -304,6 +325,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedShelfRoute: AuthenticatedShelfRoute,
   AuthenticatedBooksBookIdRoute: AuthenticatedBooksBookIdRoute,
+  AuthenticatedProfilesUserIdRoute: AuthenticatedProfilesUserIdRoute,
   AuthenticatedReadBookIdRoute: AuthenticatedReadBookIdRoute,
 }
 
@@ -319,3 +341,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

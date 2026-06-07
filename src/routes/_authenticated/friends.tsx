@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,12 +103,12 @@ function FriendsPage() {
                 const isFollowing = follows.includes(p.id);
                 return (
                   <div key={p.id} className="flex items-center justify-between rounded-2xl bg-periwinkle/15 p-3">
-                    <div className="flex items-center gap-3">
+                    <Link to="/profiles/$userId" params={{ userId: p.id }} className="flex items-center gap-3 hover:opacity-80">
                       <div className="grid h-10 w-10 place-items-center rounded-full bg-butter font-chunky text-midnight pop-shadow">
                         {(p.display_name ?? "?").slice(0, 1).toUpperCase()}
                       </div>
                       <span className="font-bold text-midnight">{p.display_name ?? "Anonymous reader"}</span>
-                    </div>
+                    </Link>
                     <button
                       onClick={() => (isFollowing ? unfollow.mutate(p.id) : follow.mutate(p.id))}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
@@ -145,9 +145,9 @@ function FriendsPage() {
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-hand text-sm text-coral">
+                      <Link to="/profiles/$userId" params={{ userId: a.user_id }} className="font-hand text-sm text-coral hover:underline">
                         {p?.display_name ?? "A reader"} · {a.shelf.replace("-", " ")}
-                      </p>
+                      </Link>
                       <p className="line-clamp-1 font-chunky text-base text-midnight">{book?.title}</p>
                       <p className="line-clamp-1 text-xs italic text-midnight/60">{book?.author}</p>
                       {a.current_page && a.total_pages && (
