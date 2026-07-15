@@ -15,6 +15,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const dest = next || "/dashboard";
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState<"google" | "magic" | "password" | null>(null);
   const [sent, setSent] = useState(false);
@@ -23,9 +25,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard" });
+      if (data.user) window.location.href = dest;
     });
-  }, [navigate]);
+  }, [dest]);
 
   async function signInGoogle() {
     setLoading("google");
