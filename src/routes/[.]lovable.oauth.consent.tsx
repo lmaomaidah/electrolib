@@ -91,7 +91,7 @@ function Consent() {
 
         {scopes.length > 0 && (
           <ul className="mt-4 space-y-1 text-sm text-midnight/70">
-            {scopes.map((s) => (
+            {scopes.map((s: string) => (
               <li key={s} className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-coral" /> {s}
               </li>
