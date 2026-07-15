@@ -7,6 +7,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : "",
+  }),
   head: () => ({ meta: [{ title: "Sign in — ElectroLibrary" }] }),
 });
 
