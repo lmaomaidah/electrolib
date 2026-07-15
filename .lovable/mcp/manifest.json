@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://gsenknmnivvrrelbbqqb.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "electrolibrary-mcp",
+      "version": "0.1.0",
+      "title": "ElectroLibrary"
+    },
+    "tools": [
+      {
+        "name": "list_my_shelf",
+        "title": "List my shelf",
+        "description": "List the signed-in user's books on their shelf, optionally filtered by shelf label.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "shelf": {
+              "description": "Filter by shelf label.",
+              "type": "string",
+              "enum": [
+                "want-to-read",
+                "currently-reading",
+                "read"
+              ]
+            },
+            "limit": {
+              "description": "Max rows to return (default 50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_books",
+        "title": "Search books",
+        "description": "Search Open Library for books by title, author, or keywords. Public catalog data.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search query (title, author, keywords)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_book_to_shelf",
+        "title": "Add book to shelf",
+        "description": "Add a book to the signed-in user's shelf. Creates the book record if it does not exist.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Book title."
+            },
+            "author": {
+              "description": "Book author.",
+              "type": "string"
+            },
+            "shelf": {
+              "type": "string",
+              "enum": [
+                "want-to-read",
+                "currently-reading",
+                "read"
+              ],
+              "description": "Which shelf to add to."
+            },
+            "cover_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "isbn": {
+              "type": "string"
+            },
+            "genre": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "shelf"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_book_progress",
+        "title": "Update reading progress",
+        "description": "Update rating, review, shelf, current page, or favorite status for a book on the signed-in user's shelf.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "user_book_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "The user_books.id (from list_my_shelf)."
+            },
+            "shelf": {
+              "type": "string",
+              "enum": [
+                "want-to-read",
+                "currently-reading",
+                "read"
+              ]
+            },
+            "rating": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "review": {
+              "type": "string"
+            },
+            "current_page": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "is_favorite": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "user_book_id"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

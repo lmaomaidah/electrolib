@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -7,11 +7,15 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : undefined,
+  }),
   head: () => ({ meta: [{ title: "Sign in — ElectroLibrary" }] }),
 });
 
 function AuthPage() {
-  const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const dest = next || "/dashboard";
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState<"google" | "magic" | "password" | null>(null);
   const [sent, setSent] = useState(false);
@@ -20,18 +24,18 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard" });
+      if (data.user) window.location.href = dest;
     });
-  }, [navigate]);
+  }, [dest]);
 
   async function signInGoogle() {
     setLoading("google");
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/dashboard`,
+        redirect_uri: `${window.location.origin}${dest}`,
       });
       if (result.error) throw result.error;
-      if (!result.redirected) navigate({ to: "/dashboard" });
+      if (!result.redirected) window.location.href = dest;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
       setLoading(null);
@@ -45,7 +49,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+        options: { emailRedirectTo: `${window.location.origin}${dest}` },
       });
       if (error) throw error;
       setSent(true);
@@ -65,7 +69,7 @@ function AuthPage() {
         const { error: upErr } = await supabase.auth.signUp({
           email, password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}${dest}`,
             data: { display_name: email.split("@")[0] },
           },
         });
@@ -73,7 +77,7 @@ function AuthPage() {
         toast.success("Welcome! Check your email to confirm.");
         return;
       }
-      navigate({ to: "/dashboard" });
+      window.location.href = dest;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign-in failed");
     } finally {
