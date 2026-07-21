@@ -214,8 +214,8 @@ function ClubPage() {
               <div className="mt-4 space-y-3">
                 {posts.length === 0 && <p className="rounded-2xl bg-white p-6 text-center font-hand text-midnight/60 pop-shadow">Be the first to post!</p>}
                 {posts.map((p: any) => (
-          <PostCard key={post.id} post={post} myVote={myVotes[post.id] ?? 0}
-                    canModerate={!!canModerate} isAuthor={post.user_id === me}
+                  <PostCard key={p.id} post={p} myVote={myVotes[p.id] ?? 0}
+                    canModerate={!!canModerate} isAuthor={p.user_id === me}
                     onVote={(v) => vote.mutate({ postId: p.id, value: v })}
                     onPin={() => togglePin.mutate({ id: p.id, pinned: p.pinned })}
                     onDelete={() => { if (confirm("Delete this post?")) deletePost.mutate(p.id); }}
