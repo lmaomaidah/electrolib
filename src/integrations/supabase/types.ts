@@ -77,28 +77,194 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          book_id: string | null
+          color: string | null
+          created_at: string
+          event_date: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          book_id?: string | null
+          color?: string | null
+          created_at?: string
+          event_date: string
+          id?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string | null
+          color?: string | null
+          created_at?: string
+          event_date?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_members: {
         Row: {
           club_id: string
           id: string
           joined_at: string
+          role: string
           user_id: string
         }
         Insert: {
           club_id: string
           id?: string
           joined_at?: string
+          role?: string
           user_id: string
         }
         Update: {
           club_id?: string
           id?: string
           joined_at?: string
+          role?: string
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_post_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "club_post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "club_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_post_votes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "club_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_posts: {
+        Row: {
+          body: string | null
+          book_id: string | null
+          club_id: string
+          created_at: string
+          id: string
+          pinned: boolean
+          score: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          book_id?: string | null
+          club_id: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          score?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          book_id?: string | null
+          club_id?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          score?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_posts_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_posts_club_id_fkey"
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
@@ -127,6 +293,45 @@ export type Database = {
           id?: string
           name?: string
           owner_id?: string
+        }
+        Relationships: []
+      }
+      epub_requests: {
+        Row: {
+          author: string | null
+          created_at: string
+          id: string
+          message: string | null
+          requester_email: string | null
+          requester_name: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -235,6 +440,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_log: {
+        Row: {
+          book_id: string | null
+          created_at: string
+          id: string
+          log_date: string
+          minutes: number | null
+          note: string | null
+          pages: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          log_date: string
+          minutes?: number | null
+          note?: string | null
+          pages?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string | null
+          created_at?: string
+          id?: string
+          log_date?: string
+          minutes?: number | null
+          note?: string | null
+          pages?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_log_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_books: {
         Row: {
           book_id: string
@@ -326,6 +575,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_set_role: {
+        Args: {
+          _grant: boolean
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       find_or_create_book: {
         Args: {
           _author: string
@@ -342,6 +600,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_club_mod: {
+        Args: { _club_id: string; _user_id: string }
         Returns: boolean
       }
     }

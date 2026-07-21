@@ -261,6 +261,8 @@ function EpubRequestForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [msg, setMsg] = useState("");
   const [sending, setSending] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -269,43 +271,48 @@ function EpubRequestForm() {
     setSending(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        toast.error("Please sign in first to send a request");
-        setSending(false);
-        return;
-      }
-      const msg = `EPUB REQUEST\nName: ${name || "—"}\nEmail: ${email || u.user.email || "—"}\nBook: ${title}`;
-      const { error } = await supabase.from("feedback").insert({
-        user_id: u.user.id, message: msg.slice(0, 1000), rating: null,
+      const { error } = await supabase.from("epub_requests").insert({
+        user_id: u.user?.id ?? null,
+        requester_name: name || null,
+        requester_email: email || u.user?.email || null,
+        title: title.slice(0, 200),
+        author: author.slice(0, 120) || null,
+        message: msg.slice(0, 800) || null,
       });
       if (error) throw error;
       toast.success("Request sent to the librarians!");
-      setName(""); setEmail(""); setTitle("");
+      setName(""); setEmail(""); setTitle(""); setAuthor(""); setMsg("");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send");
     } finally { setSending(false); }
   }
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} id="contact">
       <div className="font-chunky text-coral text-lg">REQUEST AN EPUB</div>
       <p className="mt-1 text-[10px] text-midnight/60">
-        Ask the librarians to add a book to the catalogue.
+        Missing a book? Ask a librarian to source it — admins review requests weekly.
       </p>
       <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Your name</label>
       <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80}
         className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional" />
       <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Email</label>
       <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" maxLength={120}
-        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Optional reply-to" />
-      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Book you want</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200}
-        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Title — Author" />
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="you@library.com" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Book title *</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Piranesi" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Author</label>
+      <input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={120}
+        className="mt-1 w-full rounded-full border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Susanna Clarke" />
+      <label className="mt-2 block text-[10px] font-bold uppercase tracking-wider text-midnight/70">Note</label>
+      <textarea value={msg} onChange={(e) => setMsg(e.target.value)} maxLength={800} rows={2}
+        className="mt-1 w-full rounded-2xl border-2 border-periwinkle/40 bg-white px-3 py-1.5 text-sm outline-none focus:border-coral" placeholder="Edition, why you want it…" />
       <button disabled={sending} className="mt-3 w-full rounded-full bg-coral py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-coral-deep disabled:opacity-60">
         {sending ? "Sending…" : "Send request →"}
       </button>
       <p className="mt-2 text-[10px] italic text-midnight/50">
-        Sign in to send. We reply through the Feedback inbox.
+        Anyone can request — no sign-in required.
       </p>
     </form>
   );
