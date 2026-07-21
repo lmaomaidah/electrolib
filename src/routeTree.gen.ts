@@ -25,6 +25,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedReadBookIdRouteImport } from './routes/_authenticated/read.$bookId'
 import { Route as AuthenticatedProfilesUserIdRouteImport } from './routes/_authenticated/profiles.$userId'
+import { Route as AuthenticatedClubsClubIdRouteImport } from './routes/_authenticated/clubs.$clubId'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -111,6 +112,12 @@ const AuthenticatedProfilesUserIdRoute =
     path: '/profiles/$userId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedClubsClubIdRoute =
+  AuthenticatedClubsClubIdRouteImport.update({
+    id: '/$clubId',
+    path: '/$clubId',
+    getParentRoute: () => AuthenticatedClubsRoute,
+  } as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
@@ -136,7 +143,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/clubs': typeof AuthenticatedClubsRoute
+  '/clubs': typeof AuthenticatedClubsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
@@ -156,7 +164,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/clubs': typeof AuthenticatedClubsRoute
+  '/clubs': typeof AuthenticatedClubsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
@@ -178,7 +187,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
-  '/_authenticated/clubs': typeof AuthenticatedClubsRoute
+  '/_authenticated/clubs': typeof AuthenticatedClubsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
@@ -188,6 +197,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/_authenticated/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/_authenticated/profiles/$userId': typeof AuthenticatedProfilesUserIdRoute
   '/_authenticated/read/$bookId': typeof AuthenticatedReadBookIdRoute
 }
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/books/$bookId'
+    | '/clubs/$clubId'
     | '/profiles/$userId'
     | '/read/$bookId'
   fileRoutesByTo: FileRoutesByTo
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/books/$bookId'
+    | '/clubs/$clubId'
     | '/profiles/$userId'
     | '/read/$bookId'
   id:
@@ -251,6 +263,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/books/$bookId'
+    | '/_authenticated/clubs/$clubId'
     | '/_authenticated/profiles/$userId'
     | '/_authenticated/read/$bookId'
   fileRoutesById: FileRoutesById
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilesUserIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/clubs/$clubId': {
+      id: '/_authenticated/clubs/$clubId'
+      path: '/$clubId'
+      fullPath: '/clubs/$clubId'
+      preLoaderRoute: typeof AuthenticatedClubsClubIdRouteImport
+      parentRoute: typeof AuthenticatedClubsRoute
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
@@ -404,9 +424,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedClubsRouteChildren {
+  AuthenticatedClubsClubIdRoute: typeof AuthenticatedClubsClubIdRoute
+}
+
+const AuthenticatedClubsRouteChildren: AuthenticatedClubsRouteChildren = {
+  AuthenticatedClubsClubIdRoute: AuthenticatedClubsClubIdRoute,
+}
+
+const AuthenticatedClubsRouteWithChildren =
+  AuthenticatedClubsRoute._addFileChildren(AuthenticatedClubsRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedClubsRoute: typeof AuthenticatedClubsRoute
+  AuthenticatedClubsRoute: typeof AuthenticatedClubsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
@@ -420,7 +451,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedClubsRoute: AuthenticatedClubsRoute,
+  AuthenticatedClubsRoute: AuthenticatedClubsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
@@ -450,13 +481,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

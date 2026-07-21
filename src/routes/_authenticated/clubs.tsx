@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,21 +155,33 @@ function ClubsPage() {
             return (
               <div key={c.id} className="rounded-2xl bg-white p-5 pop-shadow">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-chunky text-lg text-midnight">{c.name}</h3>
+                  <div className="min-w-0 flex-1">
+                    <Link to="/clubs/$clubId" params={{ clubId: c.id }} className="hover:underline">
+                      <h3 className="font-chunky text-lg text-midnight">r/{c.name}</h3>
+                    </Link>
                     <p className="mt-1 text-sm text-midnight/70">{c.description || "No description"}</p>
                     <p className="mt-2 font-hand text-xs text-coral">{memberCount} member{memberCount === 1 ? "" : "s"}</p>
                   </div>
-                  <button
-                    onClick={() => toggleJoin.mutate({ clubId: c.id, joined })}
-                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider ${
-                      joined
-                        ? "bg-midnight/10 text-midnight hover:bg-midnight/20"
-                        : "bg-coral text-white hover:bg-coral-deep"
-                    }`}
-                  >
-                    {joined ? (<><LogOut className="h-3.5 w-3.5" /> Leave</>) : (<><Plus className="h-3.5 w-3.5" /> Join</>)}
-                  </button>
+                  <div className="flex flex-col gap-1.5">
+                    {joined && (
+                      <Link
+                        to="/clubs/$clubId" params={{ clubId: c.id }}
+                        className="shrink-0 inline-flex items-center gap-1 rounded-full bg-butter px-4 py-1.5 text-xs font-bold uppercase text-midnight hover:bg-coral hover:text-white"
+                      >
+                        Open
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => toggleJoin.mutate({ clubId: c.id, joined })}
+                      className={`shrink-0 inline-flex items-center gap-1 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider ${
+                        joined
+                          ? "bg-midnight/10 text-midnight hover:bg-midnight/20"
+                          : "bg-coral text-white hover:bg-coral-deep"
+                      }`}
+                    >
+                      {joined ? (<><LogOut className="h-3.5 w-3.5" /> Leave</>) : (<><Plus className="h-3.5 w-3.5" /> Join</>)}
+                    </button>
+                  </div>
                 </div>
               </div>
             );

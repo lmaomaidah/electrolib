@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/theme-provider";
-import { Sun, Moon, ExternalLink, Settings as SettingsIcon } from "lucide-react";
+import { Sun, Moon, ExternalLink, Settings as SettingsIcon, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -85,6 +85,17 @@ function SettingsPage() {
           </a>
         </section>
 
+        <section className="mt-6 rounded-3xl border-2 border-coral/40 bg-white p-6 pop-shadow">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-coral" />
+            <h2 className="font-chunky text-2xl text-midnight">DANGER ZONE</h2>
+          </div>
+          <p className="mt-2 text-sm text-midnight/70">
+            Wipe every book off your shelf. Reviews, ratings, progress — all gone. Cannot be undone.
+          </p>
+          <DeleteShelfButton />
+        </section>
+
         <button onClick={save}
           className="mt-6 rounded-full bg-coral px-6 py-2.5 font-bold uppercase tracking-wider text-white pop-shadow hover:bg-coral-deep">
           Save settings →
@@ -122,5 +133,47 @@ function ThemeBtn({ active, onClick, icon, label }: { active: boolean; onClick: 
     >
       {icon} {label}
     </button>
+  );
+}
+
+function DeleteShelfButton() {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  async function wipe() {
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not signed in");
+      const { error } = await supabase.from("user_books").delete().eq("user_id", u.user.id);
+      if (error) throw error;
+      toast.success("Your shelf has been cleared");
+      setConfirming(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not clear shelf");
+    } finally { setBusy(false); }
+  }
+  if (!confirming) {
+    return (
+      <button onClick={() => setConfirming(true)}
+        className="mt-4 inline-flex items-center gap-2 rounded-full border-2 border-coral bg-white px-5 py-2 text-sm font-bold text-coral hover:bg-coral hover:text-white">
+        <Trash2 className="h-4 w-4" /> Delete entire shelf
+      </button>
+    );
+  }
+  return (
+    <div className="mt-4 rounded-2xl border-2 border-coral bg-coral/5 p-4">
+      <p className="font-bold text-midnight">Are you absolutely sure?</p>
+      <p className="mt-1 text-sm text-midnight/70">Every book, rating, review and progress marker will be permanently deleted.</p>
+      <div className="mt-3 flex gap-2">
+        <button onClick={wipe} disabled={busy}
+          className="rounded-full bg-coral px-4 py-1.5 text-sm font-bold text-white hover:bg-coral-deep disabled:opacity-60">
+          {busy ? "Wiping…" : "Yes, wipe it all"}
+        </button>
+        <button onClick={() => setConfirming(false)}
+          className="rounded-full border-2 border-midnight/20 bg-white px-4 py-1.5 text-sm font-bold text-midnight">
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
