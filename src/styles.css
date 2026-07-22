@@ -237,7 +237,32 @@
   }
 
   /* Book spine base — taller, glossier, more book-like */
-  .shelf-row-3d { perspective: 1600px; }
+  .shelf-row-3d {
+    perspective: 1600px;
+    position: relative;
+  }
+  /* Brass bookends framing every plank */
+  .shelf-row-3d::before,
+  .shelf-row-3d::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    width: 10px;
+    height: 78%;
+    background: linear-gradient(180deg,
+      oklch(0.82 0.14 82) 0%,
+      oklch(0.66 0.13 78) 45%,
+      oklch(0.48 0.10 70) 100%);
+    border-radius: 2px 2px 1px 1px;
+    box-shadow:
+      inset -2px 0 3px oklch(0 0 0 / 0.35),
+      inset 2px 0 2px oklch(1 0 0 / 0.35),
+      0 4px 8px oklch(0 0 0 / 0.35);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .shelf-row-3d::before { left: -6px; }
+  .shelf-row-3d::after { right: -6px; }
   .book-spine {
     position: relative;
     transition: transform 380ms cubic-bezier(.22,.85,.25,1.05),
