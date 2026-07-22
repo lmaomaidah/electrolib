@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Bell, Search, BookOpen, Highlighter, MessageCircle } from "lucide-react";
+import { ArrowRight, Bell, Search, BookOpen, Highlighter, MessageCircle, ChevronLeft, ChevronRight, Flame, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -121,6 +122,8 @@ function Dashboard() {
                 Your collections will appear here as your library grows.
               </p>
             )}
+
+            <ReadingActivityChart userId={userId} />
           </section>
 
           <aside className="space-y-5">
@@ -132,7 +135,7 @@ function Dashboard() {
               <ProgressRing read={books.filter((b) => b.shelf === "read").length} goal={profile?.reading_goal ?? 12} />
             </div>
 
-            <ReadingSchedule />
+            <ReadingSchedule userId={userId} books={books} />
             <FriendsFeed />
 
             <Link
@@ -173,51 +176,259 @@ function SeriesCard({ b }: { b: UserBook }) {
   );
 }
 
-function ReadingSchedule() {
+function ReadingSchedule({ userId, books }: { userId: string | null; books: UserBook[] }) {
+  const qc = useQueryClient();
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date(); d.setDate(1); return d;
+  });
+  const [selected, setSelected] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [pages, setPages] = useState<string>("");
+  const [bookId, setBookId] = useState<string>("");
+
+  const monthKey = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+  const { data: logs = [] } = useQuery({
+    queryKey: ["reading-log", userId, monthKey],
+    enabled: !!userId,
+    queryFn: async () => {
+      const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1).toISOString().slice(0, 10);
+      const end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("reading_log")
+        .select("id,log_date,pages,note,book_id,book:books(title)")
+        .eq("user_id", userId!)
+        .gte("log_date", start).lte("log_date", end);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const addLog = useMutation({
+    mutationFn: async () => {
+      if (!userId || !selected) throw new Error("Pick a date");
+      const { error } = await supabase.from("reading_log").insert({
+        user_id: userId, log_date: selected,
+        pages: pages ? Number(pages) : null,
+        note: note.trim() || null,
+        book_id: bookId || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Logged!"); setNote(""); setPages(""); setBookId("");
+      qc.invalidateQueries({ queryKey: ["reading-log"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   const today = new Date();
-  const month = today.toLocaleString("en-US", { month: "long" });
-  const year = today.getFullYear();
-  const days = useMemo(() => {
-    const first = new Date(year, today.getMonth(), 1);
-    const last = new Date(year, today.getMonth() + 1, 0);
-    const startPad = first.getDay();
-    return { startPad, total: last.getDate(), today: today.getDate() };
-  }, [today, year]);
+  const todayStr = today.toISOString().slice(0, 10);
+  const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const last = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+  const startPad = first.getDay();
+  const monthName = cursor.toLocaleString("en-US", { month: "long" });
+
+  const byDate = useMemo(() => {
+    const m: Record<string, typeof logs> = {};
+    logs.forEach((l) => { (m[l.log_date] ??= []).push(l); });
+    return m;
+  }, [logs]);
+
+  // simple streak = consecutive days ending today with any log
+  const streak = useMemo(() => {
+    if (!logs.length) return 0;
+    const set = new Set(logs.map((l) => l.log_date));
+    let s = 0; const d = new Date();
+    while (set.has(d.toISOString().slice(0, 10))) { s++; d.setDate(d.getDate() - 1); }
+    return s;
+  }, [logs]);
+
+  const selectedLogs = selected ? byDate[selected] ?? [] : [];
 
   return (
     <div className="rounded-3xl bg-white p-5 pop-shadow">
       <div className="flex items-center justify-between">
-        <h3 className="font-chunky text-xl text-midnight">SCHEDULE</h3>
-        <span className="font-hand text-sm text-coral">{month} {year}</span>
+        <h3 className="font-chunky text-xl text-midnight">READING LOG</h3>
+        <span className="inline-flex items-center gap-1 rounded-full bg-coral/10 px-2 py-0.5 font-hand text-xs text-coral">
+          <Flame className="h-3 w-3" /> {streak}d streak
+        </span>
+      </div>
+      <div className="mt-2 flex items-center justify-between">
+        <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="rounded-full p-1 hover:bg-periwinkle/30">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="font-hand text-sm text-coral">{monthName} {cursor.getFullYear()}</span>
+        <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="rounded-full p-1 hover:bg-periwinkle/30">
+          <ChevronRight className="h-4 w-4" />
+        </button>
       </div>
       <div className="mt-3 grid grid-cols-7 gap-1 text-center">
         {["S","M","T","W","T","F","S"].map((d, i) => (
           <span key={i} className="font-bold text-[10px] uppercase tracking-wide text-midnight/50">{d}</span>
         ))}
-        {Array.from({ length: days.startPad }).map((_, i) => <span key={`pad-${i}`} />)}
-        {Array.from({ length: days.total }).map((_, i) => {
+        {Array.from({ length: startPad }).map((_, i) => <span key={`pad-${i}`} />)}
+        {Array.from({ length: last.getDate() }).map((_, i) => {
           const day = i + 1;
-          const isToday = day === days.today;
-          const hasSession = [3, 8, 12, 17, 22, 25].includes(day);
+          const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const isToday = dateStr === todayStr;
+          const has = !!byDate[dateStr]?.length;
+          const isSel = selected === dateStr;
           return (
-            <span
+            <button
               key={day}
-              className={`grid h-7 place-items-center rounded-full text-xs font-bold ${
-                isToday
-                  ? "bg-coral text-white pop-shadow"
-                  : hasSession
-                  ? "bg-butter text-midnight"
-                  : "text-midnight/55 hover:bg-periwinkle/30"
+              onClick={() => setSelected(dateStr)}
+              className={`grid h-7 place-items-center rounded-full text-xs font-bold transition ${
+                isSel ? "bg-midnight text-butter pop-shadow"
+                : isToday ? "bg-coral text-white pop-shadow"
+                : has ? "bg-butter text-midnight"
+                : "text-midnight/55 hover:bg-periwinkle/30"
               }`}
-            >
-              {day}
-            </span>
+            >{day}</button>
           );
         })}
+      </div>
+
+      {selected && (
+        <div className="mt-3 rounded-2xl bg-periwinkle/15 p-3">
+          <p className="font-hand text-xs text-coral">{selected}</p>
+          {selectedLogs.length > 0 && (
+            <ul className="mt-1 space-y-1">
+              {selectedLogs.map((l) => (
+                <li key={l.id} className="text-xs text-midnight">
+                  {(l.book as { title: string } | null)?.title ?? "Reading"}{l.pages ? ` · ${l.pages}p` : ""}{l.note ? ` — ${l.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-2 grid gap-1.5">
+            <select value={bookId} onChange={(e) => setBookId(e.target.value)}
+              className="rounded-lg border border-midnight/15 bg-white px-2 py-1 text-xs">
+              <option value="">— optional book —</option>
+              {books.map((b) => <option key={b.id} value={b.book.id}>{b.book.title}</option>)}
+            </select>
+            <div className="flex gap-1.5">
+              <input value={pages} onChange={(e) => setPages(e.target.value)} inputMode="numeric" placeholder="pages"
+                className="w-20 rounded-lg border border-midnight/15 bg-white px-2 py-1 text-xs" />
+              <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="note (optional)"
+                className="flex-1 rounded-lg border border-midnight/15 bg-white px-2 py-1 text-xs" />
+              <button onClick={() => addLog.mutate()} disabled={addLog.isPending}
+                className="inline-flex items-center gap-1 rounded-lg bg-coral px-2 py-1 text-xs font-bold text-white hover:bg-coral-deep disabled:opacity-60">
+                <Plus className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type Range = "day" | "week" | "month" | "year";
+function ReadingActivityChart({ userId }: { userId: string | null }) {
+  const [range, setRange] = useState<Range>("week");
+  const { data: logs = [] } = useQuery({
+    queryKey: ["reading-log-all", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const since = new Date(); since.setFullYear(since.getFullYear() - 1);
+      const { data, error } = await supabase
+        .from("reading_log")
+        .select("log_date,pages")
+        .eq("user_id", userId!)
+        .gte("log_date", since.toISOString().slice(0, 10));
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: rated } = useQuery({
+    queryKey: ["my-avg-rating", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.from("user_books").select("rating").eq("user_id", userId!).not("rating", "is", null);
+      const nums = (data ?? []).map((r) => r.rating!).filter((n) => n > 0);
+      if (!nums.length) return { avg: 0, count: 0 };
+      return { avg: nums.reduce((a, b) => a + b, 0) / nums.length, count: nums.length };
+    },
+  });
+
+  const bars = useMemo(() => {
+    const now = new Date();
+    const buckets: { label: string; pages: number }[] = [];
+    if (range === "day") {
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now); d.setDate(now.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const pages = logs.filter((l) => l.log_date === key).reduce((a, b) => a + (b.pages ?? 0), 0);
+        buckets.push({ label: d.toLocaleDateString("en", { weekday: "short" }).slice(0, 2), pages });
+      }
+    } else if (range === "week") {
+      for (let i = 7; i >= 0; i--) {
+        const end = new Date(now); end.setDate(now.getDate() - i * 7);
+        const start = new Date(end); start.setDate(end.getDate() - 6);
+        const s = start.toISOString().slice(0, 10); const e = end.toISOString().slice(0, 10);
+        const pages = logs.filter((l) => l.log_date >= s && l.log_date <= e).reduce((a, b) => a + (b.pages ?? 0), 0);
+        buckets.push({ label: `${start.getMonth() + 1}/${start.getDate()}`, pages });
+      }
+    } else if (range === "month") {
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const nx = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        const pages = logs.filter((l) => {
+          const t = new Date(l.log_date);
+          return t >= d && t < nx;
+        }).reduce((a, b) => a + (b.pages ?? 0), 0);
+        buckets.push({ label: d.toLocaleDateString("en", { month: "short" }), pages });
+      }
+    } else {
+      for (let i = 4; i >= 0; i--) {
+        const y = now.getFullYear() - i;
+        const pages = logs.filter((l) => l.log_date.startsWith(String(y))).reduce((a, b) => a + (b.pages ?? 0), 0);
+        buckets.push({ label: String(y), pages });
+      }
+    }
+    return buckets;
+  }, [logs, range]);
+
+  const max = Math.max(1, ...bars.map((b) => b.pages));
+  const total = bars.reduce((a, b) => a + b.pages, 0);
+
+  return (
+    <div className="mt-10 rounded-3xl bg-white p-5 pop-shadow">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div>
+          <h2 className="font-chunky text-2xl text-midnight">READING ACTIVITY</h2>
+          <p className="font-hand text-sm text-coral">
+            {total} pages · avg rating {rated?.avg ? rated.avg.toFixed(2) : "—"}{rated?.count ? ` (${rated.count})` : ""}
+          </p>
+        </div>
+        <div className="flex gap-1 rounded-full bg-periwinkle/25 p-1">
+          {(["day","week","month","year"] as Range[]).map((r) => (
+            <button key={r} onClick={() => setRange(r)}
+              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${
+                range === r ? "bg-coral text-white pop-shadow" : "text-midnight/70 hover:text-midnight"
+              }`}>{r}</button>
+          ))}
+        </div>
+      </div>
+      <div className="mt-5 flex h-40 items-end gap-2">
+        {bars.map((b, i) => (
+          <div key={i} className="group relative flex flex-1 flex-col items-center">
+            <div className="absolute -top-6 hidden rounded bg-midnight px-1.5 py-0.5 text-[10px] font-bold text-butter group-hover:block">
+              {b.pages}p
+            </div>
+            <div
+              className="w-full rounded-t-md bg-gradient-to-t from-coral-deep to-coral transition-all hover:from-butter hover:to-butter"
+              style={{ height: `${(b.pages / max) * 100}%`, minHeight: b.pages > 0 ? 4 : 2 }}
+            />
+            <span className="mt-1 text-[10px] font-bold text-midnight/60">{b.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+
 
 function FriendsFeed() {
   const items = [
