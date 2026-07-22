@@ -116,6 +116,25 @@ function ReaderPage() {
             total_pages: totalPages || null,
             shelf: "currently-reading",
           }).eq("id", ub.id);
+          // Auto-log a reading session today (upsert per-book per-day)
+          try {
+            const { data: u } = await supabase.auth.getUser();
+            if (u.user && ub.book?.id) {
+              const today = new Date().toISOString().slice(0, 10);
+              const { data: existing } = await supabase
+                .from("reading_log")
+                .select("id")
+                .eq("user_id", u.user.id).eq("log_date", today).eq("book_id", ub.book.id)
+                .maybeSingle();
+              if (existing) {
+                await supabase.from("reading_log").update({ pages: pageNum ?? null }).eq("id", existing.id);
+              } else {
+                await supabase.from("reading_log").insert({
+                  user_id: u.user.id, book_id: ub.book.id, log_date: today, pages: pageNum ?? null,
+                });
+              }
+            }
+          } catch { /* ignore */ }
         }
       });
     })();
