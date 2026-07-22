@@ -268,11 +268,15 @@ function OtherReaders({ bookId, meId }: { bookId: string; meId: string | null })
     queryFn: async () => {
       let q = supabase
         .from("user_books")
-        .select("id,shelf,rating,user_id,epub_path,profile:profiles(display_name,avatar_url)")
+        .select("id,shelf,rating,user_id,epub_path")
         .eq("book_id", bookId).limit(12);
       if (meId) q = q.neq("user_id", meId);
-      const { data } = await q;
-      return data ?? [];
+      const { data: rows } = await q;
+      const ids = Array.from(new Set((rows ?? []).map((r) => r.user_id)));
+      if (!ids.length) return [];
+      const { data: profs } = await supabase.from("profiles").select("id,display_name").in("id", ids);
+      const nameOf = (id: string) => profs?.find((p) => p.id === id)?.display_name ?? "Reader";
+      return (rows ?? []).map((r) => ({ ...r, name: nameOf(r.user_id) }));
     },
   });
   if (data.length === 0) return null;
@@ -288,19 +292,16 @@ function OtherReaders({ bookId, meId }: { bookId: string; meId: string | null })
         )}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
-        {data.map((r) => {
-          const p = r.profile as { display_name: string | null } | null;
-          return (
-            <Link key={r.id} to="/profiles/$userId" params={{ userId: r.user_id }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs pop-shadow hover:bg-periwinkle/30">
-              <span className="grid h-5 w-5 place-items-center rounded-full bg-coral font-chunky text-[10px] text-white">
-                {(p?.display_name ?? "?").slice(0, 1).toUpperCase()}
-              </span>
-              <span className="text-midnight">{p?.display_name ?? "Reader"}</span>
-              <span className="text-midnight/50">· {r.shelf.replace("-", " ")}</span>
-            </Link>
-          );
-        })}
+        {data.map((r) => (
+          <Link key={r.id} to="/profiles/$userId" params={{ userId: r.user_id }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs pop-shadow hover:bg-periwinkle/30">
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-coral font-chunky text-[10px] text-white">
+              {r.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="text-midnight">{r.name}</span>
+            <span className="text-midnight/50">· {r.shelf.replace("-", " ")}</span>
+          </Link>
+        ))}
       </div>
     </div>
   );
