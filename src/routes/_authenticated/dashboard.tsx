@@ -122,6 +122,8 @@ function Dashboard() {
                 Your collections will appear here as your library grows.
               </p>
             )}
+
+            <ReadingActivityChart userId={userId} />
           </section>
 
           <aside className="space-y-5">
