@@ -135,7 +135,7 @@ function Dashboard() {
               <ProgressRing read={books.filter((b) => b.shelf === "read").length} goal={profile?.reading_goal ?? 12} />
             </div>
 
-            <ReadingSchedule />
+            <ReadingSchedule userId={userId} books={books} />
             <FriendsFeed />
 
             <Link
