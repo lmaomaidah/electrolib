@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronLeft, ChevronRight, ArrowLeft, Upload, Loader2,
-  List, Type, Sun, Moon, Coffee, Minus, Plus, X,
+  List, Type, Sun, Moon, Coffee, Minus, Plus, X, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import ePub from "epubjs";
