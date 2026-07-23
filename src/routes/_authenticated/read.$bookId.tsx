@@ -81,13 +81,14 @@ function ReaderPage() {
     let cancelled = false;
     let objectUrl: string | null = null;
     const viewer = viewerRef.current;
+    const epubPath = ub.epub_path;
     viewer.replaceChildren();
     setReaderError(null);
     setReaderStatus("Checking the ePub file…");
 
     (async () => {
       // 1) Get a signed URL
-      const { data, error } = await supabase.storage.from("epubs").createSignedUrl(ub.epub_path, 3600);
+      const { data, error } = await supabase.storage.from("epubs").createSignedUrl(epubPath, 3600);
       if (error || !data?.signedUrl) {
         const msg = error?.message || "Could not create a download URL for this file.";
         console.error("[reader] signed URL failed", error);
