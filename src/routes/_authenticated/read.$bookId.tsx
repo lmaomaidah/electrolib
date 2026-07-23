@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronLeft, ChevronRight, ArrowLeft, Upload, Loader2,
-  List, Type, Sun, Moon, Coffee, Minus, Plus, X,
+  List, Type, Sun, Moon, Coffee, Minus, Plus, X, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import ePub from "epubjs";
@@ -42,6 +42,8 @@ function ReaderPage() {
   const [fontSize, setFontSize] = useState<number>(() => Number(localStorage.getItem("reader-font-size")) || 100);
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [showToc, setShowToc] = useState(false);
+  const [readerError, setReaderError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -70,13 +72,39 @@ function ReaderPage() {
     if (!ub?.epub_path || !viewerRef.current) return;
     let cancelled = false;
     const viewer = viewerRef.current;
+    setReaderError(null);
 
     (async () => {
+      // 1) Get a signed URL
       const { data, error } = await supabase.storage.from("epubs").createSignedUrl(ub.epub_path!, 3600);
-      if (error || !data) { toast.error("Could not load file"); return; }
+      if (error || !data?.signedUrl) {
+        const msg = error?.message || "Could not create a download URL for this file.";
+        console.error("[reader] signed URL failed", error);
+        if (!cancelled) setReaderError(msg);
+        return;
+      }
       if (cancelled) return;
 
-      // Wait until the viewer element has real dimensions (epub.js paginated mode needs numeric size)
+      // 2) Verify the URL actually returns the file before handing it to epub.js
+      try {
+        const probe = await fetch(data.signedUrl, { method: "GET", headers: { Range: "bytes=0-1023" } });
+        if (!probe.ok && probe.status !== 206) {
+          throw new Error(`Storage responded ${probe.status} ${probe.statusText}`);
+        }
+        const ctype = probe.headers.get("content-type") || "";
+        // epubs may be served as application/epub+zip or application/zip; reject obvious HTML/JSON errors
+        if (/text\/html|application\/json/i.test(ctype)) {
+          const body = await probe.text().catch(() => "");
+          throw new Error(`Unexpected response (${ctype}). ${body.slice(0, 120)}`);
+        }
+      } catch (err) {
+        console.error("[reader] epub URL precheck failed", err);
+        if (!cancelled) setReaderError(err instanceof Error ? err.message : "The epub file could not be downloaded.");
+        return;
+      }
+      if (cancelled) return;
+
+      // 3) Wait for the viewer to have real pixel dimensions (paginated mode needs numeric size)
       const waitForSize = () => new Promise<{ w: number; h: number }>((resolve) => {
         const check = () => {
           const r = viewer.getBoundingClientRect();
@@ -108,10 +136,11 @@ function ReaderPage() {
         if (cancelled) return;
         await rendition.display(ub.reader_cfi || undefined);
       } catch (err) {
-        console.error("[reader] failed to load epub", err);
-        toast.error("Could not open this .epub file");
+        console.error("[reader] failed to render epub", err);
+        if (!cancelled) setReaderError(err instanceof Error ? err.message : "This .epub could not be opened.");
         return;
       }
+
 
       // Resize handler so navigation keeps working after layout changes
       const ro = new ResizeObserver(() => {
@@ -186,7 +215,7 @@ function ReaderPage() {
       } catch { /* ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ub?.epub_path, ub?.id]);
+  }, [ub?.epub_path, ub?.id, reloadKey]);
 
   // Re-apply theme/font without remounting
   useEffect(() => {
@@ -294,6 +323,33 @@ function ReaderPage() {
           )}
 
           <div ref={viewerRef} className="h-full w-full" />
+
+          {readerError && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 p-6">
+              <div className="max-w-md rounded-3xl border-2 border-coral/40 bg-white p-6 text-center pop-shadow">
+                <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-coral/15 text-coral">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <h2 className="font-chunky text-lg text-midnight">Couldn't open this book</h2>
+                <p className="mt-2 break-words font-hand text-sm text-midnight/70">{readerError}</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => { setReaderError(null); setReloadKey((k) => k + 1); }}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:brightness-110"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Try again
+                  </button>
+                  <button
+                    onClick={() => navigate({ to: "/shelf" })}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-periwinkle/30 px-4 py-2 text-xs font-bold uppercase tracking-wider text-midnight hover:bg-periwinkle/50"
+                  >
+                    Back to shelf
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {/* Tap zones + buttons */}
           <button onClick={prev} aria-label="Previous page"
