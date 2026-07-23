@@ -324,6 +324,33 @@ function ReaderPage() {
 
           <div ref={viewerRef} className="h-full w-full" />
 
+          {readerError && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 p-6">
+              <div className="max-w-md rounded-3xl border-2 border-coral/40 bg-white p-6 text-center pop-shadow">
+                <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-coral/15 text-coral">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <h2 className="font-chunky text-lg text-midnight">Couldn't open this book</h2>
+                <p className="mt-2 break-words font-hand text-sm text-midnight/70">{readerError}</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => { setReaderError(null); setReloadKey((k) => k + 1); }}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:brightness-110"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" /> Try again
+                  </button>
+                  <button
+                    onClick={() => navigate({ to: "/shelf" })}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-periwinkle/30 px-4 py-2 text-xs font-bold uppercase tracking-wider text-midnight hover:bg-periwinkle/50"
+                  >
+                    Back to shelf
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
           {/* Tap zones + buttons */}
           <button onClick={prev} aria-label="Previous page"
             className="absolute left-0 top-0 h-full w-16 cursor-w-resize bg-transparent group">
