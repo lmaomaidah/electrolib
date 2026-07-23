@@ -215,7 +215,7 @@ function ReaderPage() {
       } catch { /* ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ub?.epub_path, ub?.id]);
+  }, [ub?.epub_path, ub?.id, reloadKey]);
 
   // Re-apply theme/font without remounting
   useEffect(() => {
