@@ -69,23 +69,59 @@ function ReaderPage() {
   useEffect(() => {
     if (!ub?.epub_path || !viewerRef.current) return;
     let cancelled = false;
+    const viewer = viewerRef.current;
 
     (async () => {
       const { data, error } = await supabase.storage.from("epubs").createSignedUrl(ub.epub_path!, 3600);
       if (error || !data) { toast.error("Could not load file"); return; }
       if (cancelled) return;
 
-      const book = ePub(data.signedUrl);
-      bookRef.current = book;
-      const rendition = book.renderTo(viewerRef.current!, {
-        width: "100%", height: "100%", spread: "auto", flow: "paginated",
+      // Wait until the viewer element has real dimensions (epub.js paginated mode needs numeric size)
+      const waitForSize = () => new Promise<{ w: number; h: number }>((resolve) => {
+        const check = () => {
+          const r = viewer.getBoundingClientRect();
+          if (r.width > 50 && r.height > 50) return resolve({ w: r.width, h: r.height });
+          requestAnimationFrame(check);
+        };
+        check();
       });
-      renditionRef.current = rendition;
+      const { w, h } = await waitForSize();
+      if (cancelled) return;
 
-      applyTheme(rendition, theme, fontSize);
+      let book: any;
+      let rendition: any;
+      try {
+        book = ePub(data.signedUrl);
+        bookRef.current = book;
+        rendition = book.renderTo(viewer, {
+          width: w,
+          height: h,
+          spread: "auto",
+          flow: "paginated",
+          allowScriptedContent: true,
+        });
+        renditionRef.current = rendition;
 
-      await book.ready;
-      await rendition.display(ub.reader_cfi || undefined);
+        applyTheme(rendition, theme, fontSize);
+
+        await book.ready;
+        if (cancelled) return;
+        await rendition.display(ub.reader_cfi || undefined);
+      } catch (err) {
+        console.error("[reader] failed to load epub", err);
+        toast.error("Could not open this .epub file");
+        return;
+      }
+
+      // Resize handler so navigation keeps working after layout changes
+      const ro = new ResizeObserver(() => {
+        const r = viewer.getBoundingClientRect();
+        if (r.width > 50 && r.height > 50) {
+          try { rendition.resize(r.width, r.height); } catch { /* ignore */ }
+        }
+      });
+      ro.observe(viewer);
+      (rendition as any).__ro = ro;
 
       // Load TOC
       try {
@@ -99,8 +135,11 @@ function ReaderPage() {
         setToc(flat);
       } catch { /* ignore */ }
 
-      await book.locations.generate(1600);
-      const totalPages = book.locations.length();
+      let totalPages = 0;
+      try {
+        await book.locations.generate(1600);
+        totalPages = book.locations.length();
+      } catch { /* ignore */ }
 
       rendition.on("relocated", async (loc: any) => {
         const cfi = loc?.start?.cfi as string | undefined;
@@ -116,7 +155,6 @@ function ReaderPage() {
             total_pages: totalPages || null,
             shelf: "currently-reading",
           }).eq("id", ub.id);
-          // Auto-log a reading session today (upsert per-book per-day)
           try {
             const { data: u } = await supabase.auth.getUser();
             if (u.user && ub.book?.id) {
@@ -141,9 +179,14 @@ function ReaderPage() {
 
     return () => {
       cancelled = true;
-      try { renditionRef.current?.destroy(); bookRef.current?.destroy(); } catch { /* ignore */ }
+      try {
+        (renditionRef.current as any)?.__ro?.disconnect?.();
+        renditionRef.current?.destroy();
+        bookRef.current?.destroy();
+      } catch { /* ignore */ }
     };
-  }, [ub?.epub_path, ub?.id, ub?.reader_cfi]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ub?.epub_path, ub?.id]);
 
   // Re-apply theme/font without remounting
   useEffect(() => {
