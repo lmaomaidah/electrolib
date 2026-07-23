@@ -36,14 +36,22 @@ function ReaderPage() {
   const bookRef = useRef<any>(null);
   const [ub, setUb] = useState<UB | null>(null);
   const [loading, setLoading] = useState(true);
+  const [readerStatus, setReaderStatus] = useState("Opening your book…");
   const [progress, setProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("reader-theme") as Theme) ?? "light");
-  const [fontSize, setFontSize] = useState<number>(() => Number(localStorage.getItem("reader-font-size")) || 100);
+  const [theme, setTheme] = useState<Theme>("light");
+  const [fontSize, setFontSize] = useState<number>(100);
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [showToc, setShowToc] = useState(false);
   const [readerError, setReaderError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("reader-theme");
+    if (savedTheme === "light" || savedTheme === "sepia" || savedTheme === "dark") setTheme(savedTheme);
+    const savedFontSize = Number(localStorage.getItem("reader-font-size"));
+    if (Number.isFinite(savedFontSize) && savedFontSize >= 70 && savedFontSize <= 180) setFontSize(savedFontSize);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -71,12 +79,16 @@ function ReaderPage() {
   useEffect(() => {
     if (!ub?.epub_path || !viewerRef.current) return;
     let cancelled = false;
+    let fileBuffer: ArrayBuffer | null = null;
     const viewer = viewerRef.current;
+    const epubPath = ub.epub_path;
+    viewer.replaceChildren();
     setReaderError(null);
+    setReaderStatus("Checking the ePub file…");
 
     (async () => {
       // 1) Get a signed URL
-      const { data, error } = await supabase.storage.from("epubs").createSignedUrl(ub.epub_path!, 3600);
+      const { data, error } = await supabase.storage.from("epubs").createSignedUrl(epubPath, 3600);
       if (error || !data?.signedUrl) {
         const msg = error?.message || "Could not create a download URL for this file.";
         console.error("[reader] signed URL failed", error);
@@ -85,18 +97,27 @@ function ReaderPage() {
       }
       if (cancelled) return;
 
-      // 2) Verify the URL actually returns the file before handing it to epub.js
+      // 2) Verify and download the file before handing it to epub.js. Passing the downloaded
+      // ArrayBuffer directly avoids signed-URL, blob routing, and extension-detection edge cases.
       try {
-        const probe = await fetch(data.signedUrl, { method: "GET", headers: { Range: "bytes=0-1023" } });
-        if (!probe.ok && probe.status !== 206) {
-          throw new Error(`Storage responded ${probe.status} ${probe.statusText}`);
+        setReaderStatus("Downloading the ePub…");
+        const fileResponse = await fetch(data.signedUrl);
+        if (!fileResponse.ok) {
+          throw new Error(`The ePub file could not be downloaded (${fileResponse.status} ${fileResponse.statusText}).`);
         }
-        const ctype = probe.headers.get("content-type") || "";
+        const ctype = fileResponse.headers.get("content-type") || "";
         // epubs may be served as application/epub+zip or application/zip; reject obvious HTML/JSON errors
         if (/text\/html|application\/json/i.test(ctype)) {
-          const body = await probe.text().catch(() => "");
-          throw new Error(`Unexpected response (${ctype}). ${body.slice(0, 120)}`);
+          const body = await fileResponse.text().catch(() => "");
+          throw new Error(`The ePub link returned ${ctype} instead of a book file. ${body.slice(0, 120)}`);
         }
+        const downloadedBuffer = await fileResponse.arrayBuffer();
+        const signature = new Uint8Array(downloadedBuffer.slice(0, 4));
+        const isZip = signature[0] === 0x50 && signature[1] === 0x4b;
+        if (downloadedBuffer.byteLength < 512 || !isZip) {
+          throw new Error("This upload does not look like a valid .epub file. Please upload a real EPUB, not a PDF or web page.");
+        }
+        fileBuffer = downloadedBuffer;
       } catch (err) {
         console.error("[reader] epub URL precheck failed", err);
         if (!cancelled) setReaderError(err instanceof Error ? err.message : "The epub file could not be downloaded.");
@@ -119,12 +140,14 @@ function ReaderPage() {
       let book: any;
       let rendition: any;
       try {
-        book = ePub(data.signedUrl);
+        if (!fileBuffer) throw new Error("The ePub download did not finish.");
+        setReaderStatus("Rendering the first pages…");
+        book = ePub(fileBuffer, { openAs: "binary" });
         bookRef.current = book;
         rendition = book.renderTo(viewer, {
           width: w,
           height: h,
-          spread: "auto",
+          spread: window.matchMedia("(max-width: 720px)").matches ? "none" : "auto",
           flow: "paginated",
           allowScriptedContent: true,
         });
@@ -134,7 +157,8 @@ function ReaderPage() {
 
         await book.ready;
         if (cancelled) return;
-        await rendition.display(ub.reader_cfi || undefined);
+        await displayWithBookmarkFallback(rendition, viewer, ub.reader_cfi);
+        if (!cancelled) setReaderStatus("");
       } catch (err) {
         console.error("[reader] failed to render epub", err);
         if (!cancelled) setReaderError(err instanceof Error ? err.message : "This .epub could not be opened.");
@@ -322,7 +346,16 @@ function ReaderPage() {
             </aside>
           )}
 
-          <div ref={viewerRef} className="h-full w-full" />
+          <div ref={viewerRef} data-reader-viewer className="h-full min-h-0 w-full" />
+
+          {!readerError && readerStatus && (
+            <div className="absolute inset-0 z-20 grid place-items-center bg-white/90 p-6 text-center">
+              <div className="rounded-3xl border-2 border-midnight/10 bg-white px-6 py-5 pop-shadow">
+                <Loader2 className="mx-auto mb-3 h-7 w-7 animate-spin text-coral" />
+                <p className="font-chunky text-sm uppercase tracking-wider text-midnight">{readerStatus}</p>
+              </div>
+            </div>
+          )}
 
           {readerError && (
             <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 p-6">
@@ -373,6 +406,33 @@ function ReaderPage() {
       </div>
     </div>
   );
+}
+
+async function displayWithBookmarkFallback(rendition: any, viewer: HTMLElement, cfi: string | null) {
+  await rendition.display(cfi || undefined);
+  if (await viewerHasReadablePage(viewer)) return;
+  if (cfi) {
+    console.warn("[reader] saved bookmark rendered blank; falling back to the start of the book");
+    await rendition.display();
+    if (await viewerHasReadablePage(viewer)) return;
+  }
+  throw new Error("The ePub opened, but no readable page was rendered. Try re-uploading this book file.");
+}
+
+async function viewerHasReadablePage(viewer: HTMLElement) {
+  await new Promise((resolve) => window.setTimeout(resolve, 450));
+  const iframe = viewer.querySelector("iframe");
+  if (!iframe) return false;
+  const frameRect = iframe.getBoundingClientRect();
+  if (frameRect.width < 50 || frameRect.height < 50) return false;
+  try {
+    const doc = iframe.contentDocument;
+    const text = doc?.body?.innerText?.replace(/\s+/g, "").trim() ?? "";
+    const hasContentNodes = (doc?.body?.querySelectorAll("p, h1, h2, h3, img, svg, section, article").length ?? 0) > 0;
+    return text.length > 0 || hasContentNodes;
+  } catch {
+    return true;
+  }
 }
 
 function applyTheme(rendition: any, theme: Theme, fontSize: number) {
