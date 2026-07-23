@@ -42,6 +42,8 @@ function ReaderPage() {
   const [fontSize, setFontSize] = useState<number>(() => Number(localStorage.getItem("reader-font-size")) || 100);
   const [toc, setToc] = useState<{ label: string; href: string }[]>([]);
   const [showToc, setShowToc] = useState(false);
+  const [readerError, setReaderError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     (async () => {
