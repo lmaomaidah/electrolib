@@ -100,20 +100,16 @@ function ReaderPage() {
       // 2) Verify and download the file before handing it to epub.js. Passing the downloaded
       // ArrayBuffer directly avoids signed-URL, blob routing, and extension-detection edge cases.
       try {
-        const probe = await fetch(data.signedUrl, { method: "GET", headers: { Range: "bytes=0-1023" } });
-        if (!probe.ok && probe.status !== 206) {
-          throw new Error(`The ePub download was rejected (${probe.status} ${probe.statusText}).`);
-        }
-        const ctype = probe.headers.get("content-type") || "";
-        // epubs may be served as application/epub+zip or application/zip; reject obvious HTML/JSON errors
-        if (/text\/html|application\/json/i.test(ctype)) {
-          const body = await probe.text().catch(() => "");
-          throw new Error(`The ePub link returned ${ctype} instead of a book file. ${body.slice(0, 120)}`);
-        }
         setReaderStatus("Downloading the ePub…");
         const fileResponse = await fetch(data.signedUrl);
         if (!fileResponse.ok) {
           throw new Error(`The ePub file could not be downloaded (${fileResponse.status} ${fileResponse.statusText}).`);
+        }
+        const ctype = fileResponse.headers.get("content-type") || "";
+        // epubs may be served as application/epub+zip or application/zip; reject obvious HTML/JSON errors
+        if (/text\/html|application\/json/i.test(ctype)) {
+          const body = await fileResponse.text().catch(() => "");
+          throw new Error(`The ePub link returned ${ctype} instead of a book file. ${body.slice(0, 120)}`);
         }
         const downloadedBuffer = await fileResponse.arrayBuffer();
         const signature = new Uint8Array(downloadedBuffer.slice(0, 4));
