@@ -79,7 +79,7 @@ function ReaderPage() {
   useEffect(() => {
     if (!ub?.epub_path || !viewerRef.current) return;
     let cancelled = false;
-    let objectUrl: string | null = null;
+    let fileBuffer: ArrayBuffer | null = null;
     const viewer = viewerRef.current;
     const epubPath = ub.epub_path;
     viewer.replaceChildren();
@@ -97,8 +97,8 @@ function ReaderPage() {
       }
       if (cancelled) return;
 
-      // 2) Verify and download the file before handing it to epub.js. Rendering from a local blob avoids
-      // signed-URL/CORS/extension-detection edge cases that can leave epub.js with a blank iframe.
+      // 2) Verify and download the file before handing it to epub.js. Passing the downloaded
+      // ArrayBuffer directly avoids signed-URL, blob routing, and extension-detection edge cases.
       try {
         const probe = await fetch(data.signedUrl, { method: "GET", headers: { Range: "bytes=0-1023" } });
         if (!probe.ok && probe.status !== 206) {
@@ -115,13 +115,13 @@ function ReaderPage() {
         if (!fileResponse.ok) {
           throw new Error(`The ePub file could not be downloaded (${fileResponse.status} ${fileResponse.statusText}).`);
         }
-        const fileBuffer = await fileResponse.arrayBuffer();
-        const signature = new Uint8Array(fileBuffer.slice(0, 4));
+        const downloadedBuffer = await fileResponse.arrayBuffer();
+        const signature = new Uint8Array(downloadedBuffer.slice(0, 4));
         const isZip = signature[0] === 0x50 && signature[1] === 0x4b;
-        if (fileBuffer.byteLength < 512 || !isZip) {
+        if (downloadedBuffer.byteLength < 512 || !isZip) {
           throw new Error("This upload does not look like a valid .epub file. Please upload a real EPUB, not a PDF or web page.");
         }
-        objectUrl = URL.createObjectURL(new Blob([fileBuffer], { type: "application/epub+zip" }));
+        fileBuffer = downloadedBuffer;
       } catch (err) {
         console.error("[reader] epub URL precheck failed", err);
         if (!cancelled) setReaderError(err instanceof Error ? err.message : "The epub file could not be downloaded.");
@@ -144,9 +144,9 @@ function ReaderPage() {
       let book: any;
       let rendition: any;
       try {
-        if (!objectUrl) throw new Error("The ePub download did not finish.");
+        if (!fileBuffer) throw new Error("The ePub download did not finish.");
         setReaderStatus("Rendering the first pages…");
-        book = ePub(objectUrl, { openAs: "epub" });
+        book = ePub(fileBuffer, { openAs: "binary" });
         bookRef.current = book;
         rendition = book.renderTo(viewer, {
           width: w,
@@ -240,7 +240,6 @@ function ReaderPage() {
         (renditionRef.current as any)?.__ro?.disconnect?.();
         renditionRef.current?.destroy();
         bookRef.current?.destroy();
-        if (objectUrl) URL.revokeObjectURL(objectUrl);
       } catch { /* ignore */ }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
